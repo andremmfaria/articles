@@ -1,0 +1,30 @@
+name: Publish articles to DEV.to
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ main ]
+    paths:
+      - 'articles/**/*.md'
+      - '.github/workflows/publish.yml'
+
+jobs:
+  publish:
+    name: Publish markdown to DEV.to
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish articles on DEV.to
+        uses: sinedied/publish-devto@v2
+        with:
+          devto_key: ${{ secrets.DEV_TO_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: '**/*.md'
+          branch: main
+          conventional_commits: true
+          dry_run: false
+        env:
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
