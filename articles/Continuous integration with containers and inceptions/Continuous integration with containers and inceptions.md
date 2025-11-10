@@ -1,9 +1,13 @@
 ---
 title: Continuous integration with containers and inceptions
-tags: [ci, containers, devops]
+tags:
+  - ci
+  - containers
+  - devops
 published: true
-cover_image: https://shalb.com/wp-content/uploads/2019/11/Devops1.jpeg
-# devto_id: will be set automatically
+cover_image: 'https://shalb.com/wp-content/uploads/2019/11/Devops1.jpeg'
+id: 3011031
+date: '2025-11-10T23:50:19Z'
 ---
 
 ## Continuous integration with containers and inceptions
