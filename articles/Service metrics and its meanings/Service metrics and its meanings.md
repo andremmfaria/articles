@@ -1,9 +1,13 @@
 ---
 title: Service metrics and its meanings
-tags: [monitoring, sre, observability]
+tags:
+  - monitoring
+  - sre
+  - observability
 published: true
-cover_image: https://perfectmeasuringtape.com/app/uploads/2018/06/Fractional_inches-3.jpg
-# devto_id: will be set automatically
+cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Service%20metrics%20and%20its%C2%A0meanings/cover-service-metrics.jpg'
+id: 3011030
+date: '2025-11-10T23:50:18Z'
 ---
 
 ## Service metrics and its meanings
