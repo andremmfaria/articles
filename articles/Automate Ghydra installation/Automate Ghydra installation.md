@@ -1,9 +1,8 @@
 ---
 title: Ghidra on Linux Zero Fuss Install
-tags: [ghidra, reverse-engineering, linux, java]
+tags: [ghidra, linux, java]
 published: true
-cover_image: <https://blog.attify.com/content/images/size/w1600/2021/10/aQYgUYwnCsM.png>
-# devto_id: will be set automatically
+cover_image: https://upload.wikimedia.org/wikipedia/commons/6/60/GT3HM_-_King_Ghidorah_on_the_rampage.jpg
 ---
 
 ## Ghidra on Linux: Zero Fuss Install
