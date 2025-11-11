@@ -1,8 +1,13 @@
 ---
 title: Ghidra on Linux Zero Fuss Install
-tags: [ghidra, linux, java]
+tags:
+  - ghidra
+  - linux
+  - java
 published: true
-cover_image: https://upload.wikimedia.org/wikipedia/commons/6/60/GT3HM_-_King_Ghidorah_on_the_rampage.jpg
+cover_image: 'https://upload.wikimedia.org/wikipedia/commons/6/60/GT3HM_-_King_Ghidorah_on_the_rampage.jpg'
+id: 3011037
+date: '2025-11-11T00:04:13Z'
 ---
 
 ## Ghidra on Linux: Zero Fuss Install
