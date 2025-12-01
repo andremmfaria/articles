@@ -22,6 +22,10 @@ To set the stage, here is the physical setup as it exists today.
 
 ![Overall setup with the UDM, OPNsense box, and UniFi switch](PXL_20251119_091640053.jpg)
 
+On the top shelf we have, from left to right, a pod charger for xbox controller batteries, the USW-16 we will be using for this guide, the BACKUP bay and a small application host. And on the bottom shelf we got the OPNSense box and the UDM.
+
+That host and the backup bay are part of a [Home Assistant](https://www.home-assistant.io/) installation I did with their [HAOS system](https://developers.home-assistant.io/docs/operating-system/). If you'd like to know more about it let me know.
+
 ---
 
 ## 2. Network Topology
@@ -52,9 +56,7 @@ This OPNsense box came to life after my old laptop suddenly died. Instead of thr
 * the **two SSDs** I later mirrored as RAID-1,
 * and the **Wi-Fi card**,
 
-and reused them inside a **barebones mini-PC** I purchased from Amazon UK:
-
-👉 [https://www.amazon.co.uk/dp/B0BJQ1LX28](https://www.amazon.co.uk/dp/B0BJQ1LX28)
+and reused them inside a **barebones mini-PC** I purchased from [Amazon UK](https://www.amazon.co.uk/dp/B0BJQ1LX28).
 
 The chassis ships without RAM or storage, making it ideal for a rebuild using recycled parts.
 
@@ -95,48 +97,80 @@ It simply passes frames, while optionally filtering or inspecting them inline.
 
 ## 5. Configuring LAGG on OPNsense
 
-Two LAGGs are created:
+On the OpnSense management web interface go to **Interfaces → Devices → LAGG**
 
-### `ingresslagg` (lagg0 — toward UDM)
+There, two LAGGs are created:
 
-* `igc1` (e4:3a:6e:5d:9f:fd)
-* `igc2` (e4:3a:6e:5d:9f:fd)
+| LAGG | Interface | Direction | Members |
+| --- | --- | --- | --- |
+| `ingresslagg` | `lagg0` | toward UDM | `igc1`, `igc2` |
+| `egresslagg` | `lagg1` | toward UniFi Switch | `igc4`, `igc5` |
 
-### `egresslagg` (lagg1 — toward UniFi Switch)
+Click the "+" sign on the far right side of the table in the interface to add an entry. Repeat this for both entries on the table above.
 
-* `igc4` (e4:3a:6e:5d:a0:00)
-* `igc5` (e4:3a:6e:5d:a0:00)
+![Create lagg device](firefox_dMHnmsUE5S.png)
 
-Both LAGGs are configured in **LACP Active** mode for predictable negotiation.
+1. Physical interface 1
+2. Physical interface 2
+3. Hash layer set for L2. Following the bump-in-the-wire approach.
+4. Provide a meaningful description. Believe me, you will need it later.
 
-Next, both are added to a single bridge:
+Both LAGGs are configured in **LACP** mode. You can select more than 2 interfaces here, it only depends on how much interfaces you have. I only had 6 so in order to have a management interface (outside of the scope of this guide) i opted to have it be 2x2 (2 interfaces in and 2 interfaces out).
 
-### `laggbridge` = ingresslagg + egresslagg
+After this is set, it will look something like this:
 
-This is the interface OPNsense will actually filter on.
+![LAGG devices](firefox_G9nOq4XmwG.png)
 
-#### Management and Services Interfaces
+Click apply.
 
-These stay **outside** of the bridge:
+Next, we need to create an interface from the newly created devices. Go to **Interfaces → Assignments** and assign a new interface to each of the devices on the *Assign a new interface* menu. Remember to provide a name in the description field. That will be the interface names.
 
-* `management` (`igc3`) → 192.168.1.50/24
-* `services` (`igc0`) → 192.168.1.100/24
+![LAGG devices](firefox_kD6nuMSFyT.png)
 
-They ensure you can always reach OPNsense even if the bridge goes offline.
+Here we have **lagg-test** and **lagtest** but you can pretend that is either **ingress-lagg/egress-lagg** and **ingresslagg/egresslagg**. Click *add* to create it on the interfaces table like so:
 
-#### ⚠️ Common mistakes to avoid
+![Interface assignments](firefox_C6ITcEW0KS.png)
 
-* **Don’t assign IPs to lagg0, lagg1, or the bridge.**
-* **Don’t enable the physical NICs individually — only the LAGGs.**
-* **Don’t mix LACP Active/Passive between devices.**
-* **Don’t skip a reboot — LAGG + bridge changes apply more cleanly afterward.**
+Next, we need to add both interfaces to the bridge configuration. Go to **Interfaces → Devices → Bridge** and click the "+" sign on the far right side of the table in the interface to add an entry:
+
+![Bridge device](firefox_xpq9Rlv8C8.png)
+
+1. 1st LAGG interface
+2. 2nd LAGG interface
+3. GOOD description of what this device is.
+
+Click *Save* to add it to the bridge interface table. From here, the newly created LAGG interfaces are added to a single bridge device. This device needs to be assigned to an interface by repeating the process we did for the lagg interface creation. After this is done, we have something like this:
+
+![Bridge Interface](firefox_G8LEI9d9Dd.png)
+
+After all of this is done, we now have **`laggbridge` = ingresslagg + egresslagg**.
+
+Now, we enable the interfaces. After this is done, under the **Interfaces** menu, there should appear all interfaces we created (i.e. **laggbridge**, **ingresslagg**, **egresslagg**). Enable them all by clicking on each of the interface names under the **Interfaces** menu, check the *Enable* checkbox and click *Save*.
+
+### Management and Services Interfaces
+
+I host some services on this OPNSense box like DynamicDNS and AdGuard. The installation/management of those are outside of the scope of this article, but if you would like for me to write something about those, let me know.
+
+These are independent interfaces I set with fixed IPs (on the UDM side). They stay **outside** of the bridge and ensure I can always reach OPNsense even if the bridge goes offline:
+
+* `management` (`igc3`) → 192.168.1.x/24
+* `services` (`igc0`) → 192.168.1.y/24
+
+### ⚠️ Common mistakes to avoid
+
+* **Don’t assign IPs to lagg0, lagg1, or the bridge:** Assigning IPs would make the bridge participate in Layer 3 (routing), breaking its transparent Layer 2 operation. This could disrupt network traffic, cause routing conflicts, and interfere with VLANs and DHCP.
+
+* **Don’t enable the physical NICs individually, only the LAGGs:** Enabling NICs outside the LAGG group can cause duplicate connections, loops, or flapping, as the LAGG protocol expects to manage all member interfaces. This can destabilize the link aggregation and the bridge.
+
+* **Don’t mix LACP Active/Passive between devices:** LACP requires both ends to be in compatible modes (usually Active). Mixing Active and Passive can prevent proper negotiation, causing the aggregated link to fail or operate unreliably.
+
+* **Don’t skip a reboot, LAGG + bridge changes apply more cleanly afterward:** Network interface and bridge changes may not fully apply until after a reboot. Skipping this step can leave the system in a partially configured state, leading to unpredictable behavior or connectivity issues.
 
 ---
 
 ## 6. Configuring LACP on the UDM (Ingress Side)
 
-The UDM handles the WAN, DHCP, DNS, routing, and VLAN assignments.
-In this setup, we only need it to expose **two LACP ports** toward the OPNsense box.
+The UDM handles the WAN, DHCP, DNS, routing, and VLAN assignments. In this setup, we only need it to expose **two LACP ports** toward the OPNsense box.
 
 On the updated UniFi interface:
 
@@ -144,6 +178,10 @@ On the updated UniFi interface:
 2. Create a new **Aggregate** profile
 3. Set **LACP Mode: Active**
 4. Apply this profile to **ports 7 and 8** (or whichever pair you use)
+
+Follow this very useful guide from [Hostify](https://support.hostifi.com/en/) if anything is not clear:
+
+👉 <https://support.hostifi.com/en/articles/6454249-unifi-how-to-enable-link-aggregation-on-switches-lag>
 
 Only after the profile is in place should you plug in the cables.
 
@@ -205,11 +243,7 @@ You should see all LACP members in **ACTIVE** state.
 
 ### Optional: Throughput Testing
 
-You can run an `iperf3` test from a LAN device to something outside the bridge:
-
-* traffic should flow
-* no bottleneck should be observed
-* failover should work if you temporarily unplug one cable from each LAGG
+You can run an `iperf3` test from a LAN device to something outside the bridge. Traffic should flow, no bottleneck should be observed and failover should work if you temporarily unplug one cable from each LAGG
 
 ### ⚠️ Don’t #4 — Don’t enable hardware offloading prematurely
 
