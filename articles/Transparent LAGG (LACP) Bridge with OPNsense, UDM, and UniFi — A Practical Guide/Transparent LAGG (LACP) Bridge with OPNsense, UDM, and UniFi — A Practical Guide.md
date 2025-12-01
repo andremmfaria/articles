@@ -8,6 +8,7 @@ tags:
   - homelab
 cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Transparent%20LAGG%20%28LACP%29%20Bridge%20with%20OPNsense%2C%20UDM%2C%20and%20UniFi%20%E2%80%94%20A%20Practical%20Guide/cover-transparent-lagg-bridge.jpg'
 id: 3074989
+date: '2025-12-01T02:52:40Z'
 ---
 
 ## Transparent LAGG (LACP) Bridge with OPNsense, UDM, and UniFi — A Practical Guide
