@@ -8,6 +8,7 @@ tags:
   - homelab
 cover_image: 'https://upload.wikimedia.org/wikipedia/commons/7/70/LaGG-3_Moscow.jpg'
 id: 3074989
+date: '2025-12-01T02:52:40Z'
 ---
 
 ## Transparent LAGG (LACP) Bridge with OPNsense, UDM, and UniFi — A Practical Guide
