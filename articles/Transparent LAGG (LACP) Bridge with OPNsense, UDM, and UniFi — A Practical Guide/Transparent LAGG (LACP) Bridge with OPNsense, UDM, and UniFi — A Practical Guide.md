@@ -1,9 +1,13 @@
 ---
-title: "Building a Transparent LAGG (LACP) Bridge with OPNsense, UDM, and UniFi — A Practical Guide"
+title: 'Building a Transparent LAGG (LACP) Bridge with OPNsense, UDM, and UniFi — A Practical Guide'
 published: false
-description: "A step-by-step guide on creating a Layer 2 transparent firewall using OPNsense with LACP (LAGG) links to a UniFi Dream Machine and UniFi switch — with pitfalls, diagrams, photos, and lessons learned."
-tags: ["opnsense", "networking", "homelab"]
-cover_image: "https://upload.wikimedia.org/wikipedia/commons/7/70/LaGG-3_Moscow.jpg"
+description: 'A step-by-step guide on creating a Layer 2 transparent firewall using OPNsense with LACP (LAGG) links to a UniFi Dream Machine and UniFi switch — with pitfalls, diagrams, photos, and lessons learned.'
+tags:
+  - opnsense
+  - networking
+  - homelab
+cover_image: 'https://upload.wikimedia.org/wikipedia/commons/7/70/LaGG-3_Moscow.jpg'
+id: 3074989
 ---
 
 ## Transparent LAGG (LACP) Bridge with OPNsense, UDM, and UniFi — A Practical Guide
