@@ -1,6 +1,6 @@
 ---
 title: 'Building a Transparent LAGG (LACP) Bridge with OPNsense, UDM, and UniFi — A Practical Guide'
-published: false
+published: true
 description: 'A step-by-step guide on creating a Layer 2 transparent firewall using OPNsense with LACP (LAGG) links to a UniFi Dream Machine and UniFi switch — with pitfalls, diagrams, photos, and lessons learned.'
 tags:
   - opnsense
@@ -14,11 +14,14 @@ id: 3074989
 
 ## 1. Introduction
 
-For a long time, I wanted to place a transparent firewall between my UniFi Dream Machine (UDM) and the rest of my network — without replacing the UDM, without breaking VLANs, and without touching DNS or DHCP. The goal was simple:
+I have a pretty heavy network topology at my home. The result of years of IoT devices, user devices, servers and miscellaneous IP enabled things. Those pose some security threats that I longed to correct or, at the very least, monitor. So I had this idea to place a transparent firewall between my UniFi Dream Machine (UDM) and the rest of my network.
 
-* stay fully inline
+I wanted to do this without replacing/reconfiguring the UDM, without breaking VLANs, without touching DNS/DHCP or anything else other than what was really necessary. The goal was simple:
+
+* perform minimal changes
+* stay fully transparent to the network
 * add filtering/inspection intelligence
-* and do it using **LAGG (LACP)** for redundancy and throughput.
+* do it using **LAGG (LACP)** to increase throughput (and because it is cool).
 
 This article documents how I built a **Layer 2–only transparent bridge** using OPNsense with two aggregated links toward the UDM and two aggregated links toward my UniFi switch. It also covers the mistakes I made so you don’t repeat them.
 
@@ -28,7 +31,19 @@ To set the stage, here is the physical setup as it exists today.
 
 On the top shelf we have, from left to right, a pod charger for xbox controller batteries, the USW-16 we will be using for this guide, the BACKUP bay and a small application host. And on the bottom shelf we got the OPNSense box and the UDM.
 
-That host and the backup bay are part of a [Home Assistant](https://www.home-assistant.io/) installation I did with their [HAOS system](https://developers.home-assistant.io/docs/operating-system/). If you'd like to know more about it let me know.
+That host and the BACKUP bay are part of a [Home Assistant](https://www.home-assistant.io/) installation I did with their [HAOS system](https://developers.home-assistant.io/docs/operating-system/). If you'd like to know more about it let me know.
+
+### Sources
+
+I followed these EXCELLENT guides in order to do this:
+
+* **Video:**
+  *How to Configure LAG-LACP*
+  [https://www.youtube.com/watch?v=Rb4vlN_Hf-U](https://www.youtube.com/watch?v=Rb4vlN_Hf-U)
+
+* **Article:**
+  *Configure LAG/LACP on SFP Ports (TP-Link Example)*
+  [https://homenetworkguy.com/how-to/configure-lag-lacp-on-sfp-ports-two-tp-link-switches-with-vlans/](https://homenetworkguy.com/how-to/configure-lag-lacp-on-sfp-ports-two-tp-link-switches-with-vlans/)
 
 ---
 
@@ -71,8 +86,6 @@ The chassis ships without RAM or storage, making it ideal for a rebuild using re
 * **Storage:** 128 GB SSD (RAID-1)
 * **NICs:** 6 × Intel 1G
 * **OS:** OPNsense **25.7.5-amd64**
-* **Kernel:** FreeBSD **14.3-RELEASE-p4**
-* **Crypto:** OpenSSL **3.0.18**
 
 And here is the firewall itself, with all six Ethernet interfaces populated:
 
@@ -129,7 +142,7 @@ Click apply.
 
 Next, we need to create an interface from the newly created devices. Go to **Interfaces → Assignments** and assign a new interface to each of the devices on the *Assign a new interface* menu. Remember to provide a name in the description field. That will be the interface names.
 
-![LAGG devices](firefox_kD6nuMSFyT.png)
+![Assign new interface](firefox_kD6nuMSFyT.png)
 
 Here we have **lagg-test** and **lagtest** but you can pretend that is either **ingress-lagg/egress-lagg** and **ingresslagg/egresslagg**. Click *add* to create it on the interfaces table like so:
 
@@ -338,7 +351,7 @@ Key properties:
 
 ---
 
-## 11. Conclusion
+## 11. Conclusion and results
 
 Building a transparent bridge with LAGG on both sides is a great way to introduce a firewall into your network without redesigning the entire topology. OPNsense, combined with UniFi hardware, handles this setup surprisingly well — once everything is wired and configured correctly.
 
@@ -352,14 +365,8 @@ Along the way, I learned (the hard way) that LACP is extremely sensitive to:
 
 But once the pieces fall into place, the result is a rock-solid, redundant inline bridge that just works.
 
----
+With this setup you are able to see and/or filter EVERYTHING that is happening on your network (at least what passes through the bridge). You can set firewall rules for traffic that passes through the bridge and see cool graphs like this one:
 
-### 11.1 References
+![Cool graph](firefox_kszk5m5F4y.png)
 
-* **Video:**
-  *How to Configure LAG-LACP*
-  [https://www.youtube.com/watch?v=Rb4vlN_Hf-U](https://www.youtube.com/watch?v=Rb4vlN_Hf-U)
-
-* **Article:**
-  *Configure LAG/LACP on SFP Ports (TP-Link Example)*
-  [https://homenetworkguy.com/how-to/configure-lag-lacp-on-sfp-ports-two-tp-link-switches-with-vlans/](https://homenetworkguy.com/how-to/configure-lag-lacp-on-sfp-ports-two-tp-link-switches-with-vlans/)
+This setup has a lot that can be improved upon. I am open for feedback and would love ideas on how to make this better. Leave a comment below and tell me what you think. Thank you!!!
