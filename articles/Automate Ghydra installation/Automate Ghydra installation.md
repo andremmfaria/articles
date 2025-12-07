@@ -10,8 +10,6 @@ id: 3011037
 date: '2025-11-11T00:04:13Z'
 ---
 
-## Ghidra on Linux: Zero Fuss Install
-
 A straightforward, distro-agnostic way to install Ghidra under /opt without touching your system Java alternatives, plus environment wiring that makes upgrades safe and re-runs idempotent.
 
 Disclaimer:

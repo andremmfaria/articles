@@ -10,8 +10,6 @@ id: 3011030
 date: '2025-11-10T23:50:18Z'
 ---
 
-## Service metrics and its meanings
-
 Whenever you have a system, it doesn't really matters what it does, it is of good measure to… well… measure it.
 
 The purposes are multiple, make sure that it is performing well, measure its overall cost, measure its latency to costumers, etc. It is a fact that it is quite important to do so, but then the following question arises: how?
