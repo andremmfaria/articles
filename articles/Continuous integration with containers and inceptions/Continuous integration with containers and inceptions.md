@@ -10,8 +10,6 @@ id: 3011031
 date: '2025-11-10T23:50:19Z'
 ---
 
-## Continuous integration with containers and inceptions
-
 How to create a CI system using container recursion and how to create a CI system using container recursion
 
 As many of you already know, containers are something of wonder. They exist since the old days of computing in a concept called [OS-level virtualization](https://en.wikipedia.org/wiki/OS-level_virtualization). Since then, for their flexibility, they have been used in an orchestrated manner by many awesome tools, like [Kubernetes](https://kubernetes.io/), [DC/OS](https://dcos.io/), [Apache Mesos](http://mesos.apache.org/) and many more. This provides not only an abstraction layer on OS-Level but also enables a great deal of automation where there was none before.

@@ -11,8 +11,6 @@ id: 3074989
 date: '2025-12-01T02:52:40Z'
 ---
 
-## Transparent LAGG (LACP) Bridge with OPNsense, UDM, and UniFi — A Practical Guide
-
 ## 1. Introduction
 
 I have a pretty heavy network topology at my home. The result of years of IoT devices, user devices, servers and miscellaneous IP enabled things. Those pose some security threats that I longed to correct or, at the very least, monitor. So I had this idea to place a transparent firewall between my UniFi Dream Machine (UDM) and the rest of my network.
