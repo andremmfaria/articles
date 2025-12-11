@@ -6,6 +6,7 @@ tags:
   - algorithms
 published: false
 cover_image: 'https://images.klipfolio.com/website/public/11f3da89-351a-4ca1-a59d-b6806b0fcec1/algorithm.jpg'
+id: 3099679
 ---
 
 Technical interviews at top-tier companies consistently revolve around a core set of algorithmic patterns. These patterns—two pointers, sliding windows, heaps, graph traversals, dynamic programming, and others—form the foundation of modern problem-solving in software engineering. Understanding *when* to use each technique is as important as knowing *how* to implement it.
