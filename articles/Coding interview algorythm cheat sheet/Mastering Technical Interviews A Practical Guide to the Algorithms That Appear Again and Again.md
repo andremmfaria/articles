@@ -6,6 +6,7 @@ tags:
   - algorithms
 published: false
 cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Coding%20interview%20algorythm%20cheat%20sheet/cover-algorithm-interviews.jpg'
+id: 3099679
 ---
 
 Technical interviews at top-tier companies consistently revolve around a core set of algorithmic patterns. These patterns—two pointers, sliding windows, heaps, graph traversals, dynamic programming, and others—form the foundation of modern problem-solving in software engineering. Understanding *when* to use each technique is as important as knowing *how* to implement it.
