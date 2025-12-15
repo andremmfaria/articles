@@ -2,8 +2,8 @@ param(
     [Parameter(Mandatory=$true)][string]$FilePath,
     [Parameter(Mandatory=$false)][string]$ApiKey,
     [Parameter(Mandatory=$false)][switch]$Publish,
-    [Parameter(Mandatory=$false)][switch]$NoCover,
-    [Parameter(Mandatory=$false)][switch]$Minimal
+    [Parameter(Mandatory=$false)][switch]$Minimal,
+    [Parameter(Mandatory=$false)][ValidateSet("Cover","Tags","Description","CanonicalUrl","Series")][string[]]$RemoveHeaders
 )
 
 if (-not $ApiKey) {
@@ -47,6 +47,8 @@ if ($canYaml) {
         }
         elseif ($line -match "^description:\s*(.*)$") { $meta.description = $Matches[1].Trim('"', "'") }
         elseif ($line -match "^cover_image:\s*(.*)$") { $meta.cover_image = $Matches[1].Trim('"', "'") }
+        elseif ($line -match "^canonical_url:\s*(.*)$") { $meta.canonical_url = $Matches[1].Trim('"', "'") }
+        elseif ($line -match "^series:\s*(.*)$") { $meta.series = $Matches[1].Trim('"', "'") }
         elseif ($line -match "^tags:\s*\[(.*)\]$") {
             $meta.tags = ($Matches[1].Split(',') | ForEach-Object { $_.Trim() })
         }
@@ -69,9 +71,32 @@ if ($Publish.IsPresent) { $meta.published = $true } elseif ($null -eq $meta.publ
 if ($Minimal.IsPresent) {
     $payload = @{ article = @{ title = $meta.title; published = $meta.published; body_markdown = $body } }
 } else {
-    $payload = @{ article = @{ title = $meta.title; published = $meta.published; description = $meta.description; body_markdown = $body } }
-    if ($meta.tags.Count -gt 0) { $payload.article.tags = $meta.tags }
-    if ($meta.cover_image -and -not $NoCover.IsPresent) { $payload.article.cover_image = $meta.cover_image }
+    $payload = @{ article = @{ title = $meta.title; published = $meta.published; body_markdown = $body } }
+
+    # Description
+    if ($meta.description -and -not ($RemoveHeaders -contains "Description")) {
+        $payload.article.description = $meta.description
+    }
+
+    # Tags
+    if ($meta.tags.Count -gt 0 -and -not ($RemoveHeaders -contains "Tags")) {
+        $payload.article.tags = $meta.tags
+    }
+
+    # Cover image
+    if ($meta.cover_image -and -not ($RemoveHeaders -contains "Cover")) {
+        $payload.article.cover_image = $meta.cover_image
+    }
+
+    # Canonical URL
+    if ($meta.canonical_url -and -not ($RemoveHeaders -contains "CanonicalUrl")) {
+        $payload.article.canonical_url = $meta.canonical_url
+    }
+
+    # Series
+    if ($meta.series -and -not ($RemoveHeaders -contains "Series")) {
+        $payload.article.series = $meta.series
+    }
 }
 
 $json = $payload | ConvertTo-Json -Depth 6
