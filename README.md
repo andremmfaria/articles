@@ -29,11 +29,17 @@ Article markdown body starts here…
 
 1. Push to `main` or run the workflow manually (Actions → “Publish articles to DEV.to” → Run workflow).
 
-## Local development
+## Local upload
 
-Publishing is handled by GitHub Actions, but for local testing or ad‑hoc publishes you can use the helper scripts in `scripts/`: both PowerShell (`devto_test.ps1`) and Bash (`devto_test.sh`) versions are available. They are functionally equivalent and construct a payload from front matter.
+Publishing is handled by GitHub Actions, but for local testing or ad‑hoc publishes you can use the helper scripts in `scripts/`. Both PowerShell (`devto_test.ps1`) and Bash (`devto_test.sh`) are thin wrappers around a shared Python CLI (`devto_publish.py`). The wrappers add cross‑platform checks so the tooling works reliably on Windows and Linux (verifying Python installation, required inputs, and optional dry‑run behavior) and then forward flags to the Python core.
 
-Common options (script‑agnostic):
+Wrapper behavior:
+
+- `devto_test.ps1` and `devto_test.sh` check for Python (`python`/`python3`) in `PATH` and forward all flags to `devto_publish.py`.
+- Both wrappers validate that the file exists and, unless `--dry-run`/`-DryRun` is set, an API key is provided via flag or `DEVTO_API_KEY`.
+- Use `--dry-run`/`-DryRun` to print the payload JSON without sending to the API.
+
+Common options (script‑agnostic; provided by `devto_publish.py` and used by both wrappers):
 
 - File path: required (`-FilePath` in PowerShell, `--file` in Bash)
 - API key: optional (`-ApiKey` or `--api-key`); defaults to `DEVTO_API_KEY` env var
@@ -47,7 +53,9 @@ Behavior notes:
 - In non‑minimal mode, optional fields present in front matter are included unless explicitly removed via the remove‑headers option.
 - Cover removal via `Cover` replaces any prior `NoCover` behavior.
 
-Examples (PowerShell):
+### Examples
+
+PowerShell:
 
 ```powershell
 # Publish with all optional fields present in front matter
@@ -63,9 +71,9 @@ Examples (PowerShell):
 ./scripts/devto_test.ps1 -FilePath "articles/Service metrics and its meanings/Service metrics and its meanings.md" -Publish -RemoveHeaders Description,CanonicalUrl
 ```
 
-Examples (Bash):
+Shell:
 
-```bash
+```shell
 # Publish with all optional fields present in front matter
 ./scripts/devto_test.sh --file "articles/Continuous integration with containers and inceptions/Continuous integration with containers and inceptions.md" --publish
 
