@@ -31,7 +31,53 @@ Article markdown body starts here…
 
 ## Local development
 
-The publishing is handled entirely by the GitHub Action; there is no local script to run. You can still use pre-commit hooks locally to keep files tidy and valid.
+Publishing is handled by GitHub Actions, but for local testing or ad‑hoc publishes you can use the helper scripts in `scripts/`: both PowerShell (`devto_test.ps1`) and Bash (`devto_test.sh`) versions are available. They are functionally equivalent and construct a payload from front matter.
+
+Common options (script‑agnostic):
+
+- File path: required (`-FilePath` in PowerShell, `--file` in Bash)
+- API key: optional (`-ApiKey` or `--api-key`); defaults to `DEVTO_API_KEY` env var
+- Publish: optional (`-Publish` or `--publish`); forces `published: true`
+- Minimal: optional (`-Minimal` or `--minimal`); sends only `title`, `published`, `body_markdown`
+- Remove headers: optional (`-RemoveHeaders` or `--remove-headers`); selectively omit optional fields `Cover,Tags,Description,CanonicalUrl,Series`
+
+Behavior notes:
+
+- Required fields (`title`, `published`, `body_markdown`) are always sent.
+- In non‑minimal mode, optional fields present in front matter are included unless explicitly removed via the remove‑headers option.
+- Cover removal via `Cover` replaces any prior `NoCover` behavior.
+
+Examples (PowerShell):
+
+```powershell
+# Publish with all optional fields present in front matter
+./scripts/devto_test.ps1 -FilePath "articles/Continuous integration with containers and inceptions/Continuous integration with containers and inceptions.md" -Publish
+
+# Minimal publish (helpful for troubleshooting 422s)
+./scripts/devto_test.ps1 -FilePath "articles/Automate Ghydra installation/Automate Ghydra installation.md" -Publish -Minimal
+
+# Omit tags and cover only
+./scripts/devto_test.ps1 -FilePath "articles/Transparent LAGG (LACP) Bridge with OPNsense, UDM, and UniFi — A Practical Guide/Transparent LAGG (LACP) Bridge with OPNsense, UDM, and UniFi — A Practical Guide.md" -Publish -RemoveHeaders Tags,Cover
+
+# Omit description and canonical URL
+./scripts/devto_test.ps1 -FilePath "articles/Service metrics and its meanings/Service metrics and its meanings.md" -Publish -RemoveHeaders Description,CanonicalUrl
+```
+
+Examples (Bash):
+
+```bash
+# Publish with all optional fields present in front matter
+./scripts/devto_test.sh --file "articles/Continuous integration with containers and inceptions/Continuous integration with containers and inceptions.md" --publish
+
+# Minimal publish (helpful for troubleshooting 422s)
+./scripts/devto_test.sh --file "articles/Automate Ghydra installation/Automate Ghydra installation.md" --publish --minimal
+
+# Omit tags and cover only
+./scripts/devto_test.sh --file "articles/Transparent LAGG (LACP) Bridge with OPNsense, UDM, and UniFi — A Practical Guide/Transparent LAGG (LACP) Bridge with OPNsense, UDM, and UniFi — A Practical Guide.md" --publish --remove-headers "Tags,Cover"
+
+# Omit description and canonical URL
+./scripts/devto_test.sh --file "articles/Service metrics and its meanings/Service metrics and its meanings.md" --publish --remove-headers "Description,CanonicalUrl"
+```
 
 ### Pre-commit hooks
 
