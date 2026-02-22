@@ -13,7 +13,7 @@ Running large language models locally is easier than ever. With tools like Ollam
 
 That convenience comes with a catch.
 
-Once an LLM is wired to tools and exposed through a platform like Discord, it stops being “just a chatbot.” It becomes a control surface driven by natural language, where user input can directly influence system behavior. In that context, traditional security assumptions—clear trust boundaries, strict input validation, predictable execution—no longer hold.
+Once an LLM is wired to tools and exposed through a platform like Discord, it stops being “just a chatbot.” It becomes a control surface driven by natural language, where user input can directly influence system behaviour. In that context, traditional security assumptions like clear trust boundaries, strict input validation, predictable execution no longer hold ground.
 
 This article is not an installation guide. It’s a security-focused reflection on running a local AI agent: where the real risks appear, why “self-hosted” does not automatically mean “safe,” and which design choices actually reduce the blast radius when things go wrong.
 
@@ -25,12 +25,9 @@ In this setup, the agent is controlled through **[Discord](https://discord.com/)
 
 * **Ollama** runs on a dedicated **TrueNAS host** with an **RTX 3070**, handling all LLM inference.
 * **Model**: **Qwen3 8B**, chosen for being fast and efficient on consumer GPUs.
-* **OpenClaw** runs on a separate **Home Assistant OS (HAOS)** machine, acting as the agent control plane.
+* **OpenClaw** runs on a separate **Linux VM**, acting as the agent control plane.
 * The two hosts communicate over the local network.
 * Discord is the primary user interface.
-
-OpenClaw is integrated into Home Assistant using the community add-on described here:
-[https://community.home-assistant.io/t/openclaw-clawdbot-on-home-assistant/981467](https://community.home-assistant.io/t/openclaw-clawdbot-on-home-assistant/981467)
 
 Everything is self-hosted and not directly exposed to the internet. At first glance, this feels “safe enough.” But once you let an agent *do things*, not just chat, you’re no longer dealing with a toy system. You’re running automation driven by natural language, which changes the security model completely.
 
@@ -62,7 +59,7 @@ Qwen3 8B is a great fit for a home lab: it’s fast, it runs well on a consumer 
 
 That matters because agents don’t just “answer questions.” They can **call tools**, update memory, and sometimes fetch or interpret external content. Prompt injection is now widely treated as a top-tier LLM risk for exactly this reason: language is both *data* and *instructions*, and the model can be tricked into treating untrusted text as “policy.” OWASP calls this out directly as a primary risk category for LLM apps. ([OWASP](https://owasp.org/www-project-top-10-for-large-language-model-applications))
 
-Where it gets nasty is **indirect prompt injection**: the attacker doesn’t need to DM your bot with an obviously malicious prompt. They just need your agent to *consume* content that contains hidden instructions (HTML, docs, logs, etc.). This has been demonstrated repeatedly for web agents, where malicious strings embedded in a page can hijack agent behavior. ([arXiv:2507.14799](https://arxiv.org/abs/2507.14799))
+Where it gets nasty is **indirect prompt injection**: the attacker doesn’t need to DM your bot with an obviously malicious prompt. They just need your agent to *consume* content that contains hidden instructions (HTML, docs, logs, etc.). This has been demonstrated repeatedly for web agents, where malicious strings embedded in a page can hijack agent behaviour. ([arXiv:2507.14799](https://arxiv.org/abs/2507.14799))
 
 So the core issue isn’t “Qwen is bad.” It’s:
 
@@ -100,7 +97,7 @@ This is the key mental shift: even if the model runs locally and the gateway isn
 
 ## 5. Sandboxing and tool restriction
 
-Once the agent was wired to Discord and running a small model, the real risk wasn’t wrong/bad answers — it was **uncontrolled side effects**. This is where sandboxing becomes essential.
+Once the agent was wired to Discord and running a small model, the real risk wasn’t wrong/bad answers. It was **uncontrolled side effects**. This is where sandboxing becomes essential.
 
 In OpenClaw, sandboxing means **session-level isolation for tool execution**. Each conversation runs inside a constrained environment, with no access to the host filesystem or other sessions. If the model does something wrong, the impact is contained.
 
@@ -129,10 +126,7 @@ The last item to complete the fix was to add a rate limiting on the auth attempt
 openclaw config set gateway.auth.rateLimit '{ "maxAttempts": 10, "windowMs": 60000, "lockoutMs": 300000 }'
 ```
 
-This means:
-
-* max 10 failed attempts per minute
-* lock out for 5 minutes after that
+This means that there are a max of 10 failed attempts per minute and it locks out for 5 minutes after that.
 
 After these changes:
 
@@ -140,7 +134,7 @@ After these changes:
 * Web-based injection paths were removed
 * OpenClaw’s built-in security audit reported **zero critical or warning findings**
 
-This matches OWASP’s guidance for LLM applications: assume prompt injection will eventually happen, and focus on **reducing blast radius** instead of relying on model behavior alone ([OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/)).
+This matches OWASP’s guidance for LLM applications: assume prompt injection will eventually happen, and focus on **reducing blast radius** instead of relying on model behaviour alone ([OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/)).
 
 ---
 
