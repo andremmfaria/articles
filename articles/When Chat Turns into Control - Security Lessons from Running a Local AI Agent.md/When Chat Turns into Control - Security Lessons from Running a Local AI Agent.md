@@ -1,11 +1,11 @@
 ---
-title: When Chat Turns into Control - Security Lessons from Running a Local AI Agent
+title: When Chat Turns into Control - Security Lessons from Running a Local AI Agent using OpenClaw
 tags:
   - ai
   - security
   - openclaw
 published: true
-cover_image: 'https://bernardmarr.com/wp-content/uploads/2025/05/How-AI-Agents-Will-Revolutionize-Your-Day-To-Day-Life.jpg'
+cover_image: 'https://the-decoder.com/wp-content/uploads/2026/02/openclaw_cybersecurity.jpeg'
 id: 3274210
 date: '2026-02-22T01:49:59Z'
 ---
