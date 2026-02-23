@@ -1,5 +1,5 @@
 ---
-title: When Chat Turns into Control - Security Lessons from Running a Local AI Agent
+title: When Chat Turns into Control - Security Lessons from Running a Local AI Agent using OpenClaw
 tags:
   - ai
   - security
