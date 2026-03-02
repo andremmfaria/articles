@@ -7,6 +7,7 @@ tags:
 published: true
 cover_image: 'https://images.klipfolio.com/website/public/11f3da89-351a-4ca1-a59d-b6806b0fcec1/algorithm.jpg'
 id: 3099679
+date: '2026-03-02T18:03:30Z'
 ---
 
 Technical interviews are often framed as a test of memorization: recognize a pattern, recall a solution, write it under time pressure. This framing has fuelled an entire industry around grinding problem sets and rehearsing answers, as if strong engineers were pattern-recognition machines trained to replay known solutions on demand. [Technical interviews](https://en.wikipedia.org/wiki/Coding_interview) are generally designed to evaluate problem-solving ability, reasoning, and coding skills rather than rote recall. [Research has shown](https://www.researchgate.net/publication/393378712_How_do_Software_Engineering_Candidates_Prepare_for_Technical_Interviews) that many candidates prepare in ways that do not reflect real engineering work, often relying on memorization rather than authentic problem-solving practice.
