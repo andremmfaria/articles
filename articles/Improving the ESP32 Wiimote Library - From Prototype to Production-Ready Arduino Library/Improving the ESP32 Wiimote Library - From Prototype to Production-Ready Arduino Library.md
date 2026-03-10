@@ -6,6 +6,7 @@ tags:
   - arduino
 published: false
 cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Improving%20the%20ESP32%20Wiimote%20Library%20-%20From%20Prototype%20to%20Production-Ready%20Arduino%20Library/cover-esp32-wiimote-library.jpg'
+id: 3336197
 ---
 
 ## 1. Why I Needed a Better ESP32 Wiimote Library
