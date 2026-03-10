@@ -6,6 +6,7 @@ tags:
   - arduino
 published: false
 cover_image: 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Wiimote-Safety-First.jpg'
+id: 3336197
 ---
 
 ## 1. Why I Needed a Better ESP32 Wiimote Library
