@@ -4,7 +4,7 @@ tags:
   - wii
   - esp32
   - arduino
-published: false
+published: true
 cover_image: 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Wiimote-Safety-First.jpg'
 id: 3336197
 ---
