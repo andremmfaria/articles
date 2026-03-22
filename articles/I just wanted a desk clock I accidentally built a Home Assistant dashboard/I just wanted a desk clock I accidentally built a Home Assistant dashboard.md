@@ -14,11 +14,11 @@ I wasn’t trying to build anything.
 
 I just wanted a desk clock. Something small, clean, and with Wi-Fi so it would always have the correct time. No tinkering, no integrations, no dashboards. Just something I could plug in, place on my desk, and forget about.
 
-What I ended up buying was the [GeekMagic Ultra](https://geekmagic.com/products/geekmagic-ultra-4) on amazon. The ad marketed as a generic “smart weather clock,” which sounded close enough to what I needed. The design is nice, the screen is sharp, and on paper it looks like a slightly more capable version of a normal digital clock.
+What I ended up buying was the [GeekMagic Ultra](https://geekmagic.com/products/geekmagic-ultra-4) on Amazon. The ad marketed it as a generic “smart weather clock,” which sounded close enough to what I needed. The design is nice, the screen is sharp, and on paper it looks like a slightly more capable version of a normal digital clock.
 
 ![Image](geekmagic-smart-weather-clock-product.jpeg)
 
-Out of the box, that’s exactly what it feels like. You connect to it using its own wifi network, then it provides you with a web interface so you can configure it to connect to your Wi-Fi. It shows time, weather, and a few widgets, and generally behaves like a polished consumer device. But after a few minutes of using it, something feels off.
+Out of the box, that’s exactly what it feels like. You connect to it using its own Wi-Fi network, then it provides you with a web interface so you can configure it to connect to your Wi-Fi. It shows time, weather, and a few widgets, and generally behaves like a polished consumer device. But after a few minutes of using it, something feels off.
 
 The customization is limited. You can change what’s displayed, but not how it works. It’s flexible in appearance, but rigid in behavior. That’s usually a sign that the hardware underneath is either heavily locked down or far more capable than the software allows. In this case, it was the latter.
 
@@ -122,7 +122,7 @@ Once the display is stable, the problem shifts from “how do I make this work�
 
 In my case, the answer was straightforward: I wanted a simple network status panel that still functioned as a desk clock.
 
-The architecture ended up being very simple, given that i already had the UniFi integration on HomeAssistant:
+The architecture ended up being very simple, given that I already had the UniFi integration in Home Assistant:
 
 ```text
 UniFi Dream Machine → Home Assistant → ESPHome → Display
