@@ -6,6 +6,7 @@ tags:
   - iot
 published: false
 cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/I%20just%20wanted%20a%20desk%20clock%20I%20accidentally%20built%20a%20Home%20Assistant%20dashboard/cover-home-assistant-desk-clock.jpeg'
+id: 3382166
 ---
 
 ## 1. The Unexpected Device
