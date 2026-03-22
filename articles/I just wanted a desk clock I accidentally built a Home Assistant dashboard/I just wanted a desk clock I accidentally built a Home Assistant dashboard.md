@@ -72,6 +72,8 @@ The wiring itself also comes with a few quirks. Through community reverse engine
 * `GPIO0` / `GPIO2` → display control (DC / RESET)
 * `GPIO5` → backlight (PWM)
 
+This mapping is also referenced by the GeekMagic owner in [issue #4 of the smalltv repository](https://github.com/GeekMagicClock/smalltv/issues/4), where they shared the same pin definitions for the device (`TFT_DC=0`, `TFT_RST=2`, `SCK=14`, `MOSI=13`, `TFT_BL=5`, `TFT_CS=-1`).
+
 One detail that catches people off guard is the lack of a proper chip select line. Because of that, the display only behaves correctly when the SPI bus is configured in a specific mode (`mode3`). This is not documented anywhere official, it’s something the community figured out by trial and error.
 
 And that pattern repeats across the entire device.
@@ -92,7 +94,9 @@ There is no proper datasheet for the product as a whole (although there is a [GH
 
 The starting point for me was a [YouTube video from Maker HQ](https://www.youtube.com/watch?v=S1Q9PZ95SDM), which provides a basic working configuration. This video was really useful because it gave me a [working config file as a starting point](https://www.dropbox.com/scl/fi/9t175rsb23n8anikfplcg/ultratv.yaml?rlkey=au79zg7flndf2dz2g2uq598v4&e=1&dl=0). Without it, the proper way to set the display parameters becomes a guessing game. It gets the screen to light up and things to render, but it doesn’t explain why certain settings matter or what happens when you deviate from them.
 
-The real work happened in the [forum thread on the Home Assistant Community](https://community.home-assistant.io/t/installing-esphome-on-geekmagic-smart-weather-clock-smalltv-pro/618029/7).
+The real work happened in the [forum thread on the Home Assistant Community](https://community.home-assistant.io/t/installing-esphome-on-geekmagic-smart-weather-clock-smalltv-pro/618029).
+
+An important detail for context: the hardware shown in post #8 of that thread is exactly the same as my unit, which places mine in the clone/counterfeit variant discussed there rather than the official SmallTV Ultra hardware.
 
 That thread is long, messy, and full of partial solutions, but it’s also where most of the important details were uncovered. Not in a single place, but spread across dozens of posts. You don’t read it linearly, you piece it together.
 
@@ -114,9 +118,37 @@ That’s why copying a YAML file blindly often doesn’t work. Small differences
 
 This is one of those cases where the community didn’t just provide examples. It effectively reverse engineered the behavior of the device through collective experimentation. Without that, this would have been a dead end.
 
+Huge thanks to [MakerHQ](https://www.youtube.com/@Maker_HQ) for publishing the video walkthrough, and to everyone in the [Home Assistant forum thread](https://community.home-assistant.io/t/installing-esphome-on-geekmagic-smart-weather-clock-smalltv-pro/618029) who shared tests, pin mappings, and working configs. That collective effort is what made this project practical.
+
 ---
 
-## 4. Making It Work: ESPHome + Home Assistant Integration
+## 4. Step by Step: Connect, Flash, and Configure
+
+If you have the same hardware revision I got, the process is easier than many guides suggest.
+
+I did not need to solder anything at all. Flashing worked by simply plugging the device into my computer over USB and using the ESPHome web flasher.
+
+Here is the exact flow that worked for me:
+
+1. Connect the device to your computer with a USB cable.
+2. Open [https://web.esphome.io/](https://web.esphome.io/) in a Chromium-based browser (Chrome, Edge, Brave, etc.).
+3. Click **Connect**, then select the serial device that appears for the clock.
+4. Install ESPHome onto the device from the web installer.
+5. Wait for the first boot to complete, then join the temporary Wi-Fi AP created by the device if prompted.
+6. Join the ap through your phone or something, enter the webpage on the device and configure the WiFi connection to your network.
+7. Provide your Wi-Fi credentials so the device can join your network.
+8. Add it to Home Assistant and upload your YAML configuration.
+9. Reboot once after the first successful upload and confirm that the display renders correctly.
+
+One important browser caveat: Firefox did not work for me because this flow depends on Web Serial support, which is available in Chromium-based browsers.
+
+If you prefer to follow a visual walkthrough, there is also a step-by-step in the [MakerQH video](https://www.youtube.com/watch?v=S1Q9PZ95SDM).
+
+After this initial flash, updates are much easier because you can usually do OTA uploads from ESPHome without reconnecting USB.
+
+---
+
+## 5. Making It Work: ESPHome + Home Assistant Integration
 
 Once the display is stable, the problem shifts from “how do I make this work” to “what do I actually want it to show.”
 
@@ -165,7 +197,7 @@ No synchronization problems, no drift, no edge cases. In the end, the ESP8266 is
 
 ---
 
-## 5. The UI: Constraints Drive Design
+## 6. The UI: Constraints Drive Design
 
 Once everything is wired and talking properly, the next question is simple: what should this actually look like?
 
@@ -218,7 +250,7 @@ And on a device like this, that’s the real definition of a good UI.
 
 ---
 
-## 6. What This Became (and Why It’s Better Than a Clock)
+## 7. What This Became (and Why It’s Better Than a Clock)
 
 At some point, this stopped being about fixing a device and started becoming something else entirely.
 
