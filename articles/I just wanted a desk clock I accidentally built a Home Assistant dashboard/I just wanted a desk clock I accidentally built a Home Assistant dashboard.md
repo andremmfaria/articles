@@ -6,6 +6,7 @@ tags:
   - iot
 published: false
 cover_image: 'https://community-assets.home-assistant.io/optimized/4X/7/5/a/75a87e8573336338538dd3a8798ab353358120ef_2_333x250.jpeg'
+id: 3382166
 ---
 
 ## 1. The Unexpected Device
