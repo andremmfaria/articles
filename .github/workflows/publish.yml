@@ -66,12 +66,24 @@ jobs:
           DEVTO_TOKEN: ${{ secrets.DEV_TO_API_KEY }}
         run: |
           set -euo pipefail
+          if [[ "${ACT:-}" == "true" && ( -z "${DEVTO_TOKEN:-}" || "${DEVTO_TOKEN}" == "dummy-local-token" ) ]]; then
+            echo "Running under act without a real DEV.to token; skipping remote publish step."
+            exit 0
+          fi
+
+          extra_args=()
+          if [[ "${ACT:-}" == "true" ]]; then
+            echo "Running under act; enabling devto-cli dry-run mode."
+            extra_args+=(--dry-run)
+          fi
+
           while IFS= read -r -d '' file; do
             echo "Publishing $file"
             npx -y @sinedied/devto-cli push "$file" \
               --token "$DEVTO_TOKEN" \
               --repo "${{ github.repository }}" \
-              --branch "${{ github.ref_name }}"
+              --branch "${{ github.ref_name }}" \
+              "${extra_args[@]}"
           done < .changed_articles
 
       - name: Commit article metadata updates
@@ -79,6 +91,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [[ "${ACT:-}" == "true" ]]; then
+            echo "Running under act; skipping metadata commit step."
+            exit 0
+          fi
+
           if git diff --quiet -- articles; then
             echo "No metadata changes to commit."
             exit 0
