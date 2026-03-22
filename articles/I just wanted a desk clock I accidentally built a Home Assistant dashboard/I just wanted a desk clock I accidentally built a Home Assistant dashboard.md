@@ -8,239 +8,251 @@ published: false
 cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/I%20just%20wanted%20a%20desk%20clock%20I%20accidentally%20built%20a%20Home%20Assistant%20dashboard/cover-home-assistant-desk-clock.jpeg'
 ---
 
-## **1. The Unexpected Device**
+## 1. The Unexpected Device
 
-### Purpose 1
+I wasn’t trying to build anything.
 
-Set the context. Explain the mismatch between expectation and reality.
+I just wanted a desk clock. Something small, clean, and with Wi-Fi so it would always have the correct time. No tinkering, no integrations, no dashboards. Just something I could plug in, place on my desk, and forget about.
 
-### Include 1
+What I ended up buying was the [GeekMagic Ultra](https://geekmagic.com/products/geekmagic-ultra-4) on amazon. The ad marketed as a generic “smart weather clock,” which sounded close enough to what I needed. The design is nice, the screen is sharp, and on paper it looks like a slightly more capable version of a normal digital clock.
 
-* The original intent:
+![Image](geekmagic-smart-weather-clock-product.jpeg)
 
-  * A simple desk clock
-  * Wi-Fi sync
-  * Minimal setup, plug-and-play mindset
-* The actual device:
+Out of the box, that’s exactly what it feels like. You connect to it using its own wifi network, then it provides you with a web interface so you can configure it to connect to your Wi-Fi. It shows time, weather, and a few widgets, and generally behaves like a polished consumer device. But after a few minutes of using it, something feels off.
 
-  * GeekMagic Ultra 4
-  * Marketed as a “smart weather clock”
-  * Ships with proprietary firmware
-* First impressions:
+The customization is limited. You can change what’s displayed, but not how it works. It’s flexible in appearance, but rigid in behavior. That’s usually a sign that the hardware underneath is either heavily locked down or far more capable than the software allows. In this case, it was the latter.
 
-  * Looks polished, but limited
-  * Closed ecosystem feel
-* The turning point:
+Once you dig a bit deeper, you realize this isn’t really a “smart clock” at all. It’s an ESP8266 with a 240×240 display attached to it. That’s it. No magic, no proprietary silicon. Just a very familiar microcontroller in a nicely packaged form factor.
 
-  * Realization it’s based on **ESP8266**
-  * Meaning: fully flashable, ESPHome-compatible
+That realization changes the entire perspective. Because if it’s an ESP8266:
 
-### Key message 1
+* it can be reflashed
+* it can run ESPHome
+* it can integrate directly with Home Assistant
 
-This is not a consumer gadget. It’s a **disguised dev board with a display**.
+At that point, it stops being a product and starts being a platform.
+
+What I thought was a simple desk accessory turned out to be a small, hackable display node that fits perfectly into a home automation setup. Not by design, but by accident.
 
 ---
 
-## **2. Peeling It Open: Hardware Reality**
+## 2. Peeling It Open: Hardware Reality
 
-### Purpose 2
+Once you accept that the device is hackable, the next step is understanding what you’re actually working with. And in this case, that means ignoring the marketing entirely and looking at the hardware.
 
-Ground the reader in what the device actually is under the hood.
+![Image](https://thesolaruniverse.files.wordpress.com/2019/12/056_fig_01_96.jpg?crop=1\&h=504\&w=722)
 
-### Include 2
+![Image](geekmagic-clock-on-desk.jpg)
 
-* Internal architecture (based on teardown image):
+![Image](https://europe1.discourse-cdn.com/arduino/optimized/4X/f/5/1/f51e737d9ccba8abab1d8e7d6d0bce4cab720401_2_690x453.jpeg)
 
-  * ESP8266 module
-  * ST7789 240×240 display
-  * SPI interface (no CS)
-  * PWM-controlled backlight
-* Pin mapping realities:
+Internally, the device is very simple:
 
-  * GPIO14 / GPIO13 → SPI
-  * GPIO0 / GPIO2 → control
-  * GPIO5 → backlight
-* Constraints:
+* an ESP8266
+* a 240×240 ST7789 TFT display
+* SPI wiring between them
+* a PWM-controlled backlight
 
-  * Very limited RAM
-  * No PSRAM
-  * Display buffering is a problem
+There’s no extra compute layer, no buffering chip, no hidden abstraction. Everything you draw goes straight through the ESP8266 to the display. That simplicity is both the reason this works and the reason it can fail so easily.
 
-### Explain clearly
+The ESP8266 is a capable chip, but it is also extremely constrained. You are working with a small amount of usable RAM, no PSRAM, and a heap that can become unstable if pushed too far. On the other side, the display is not trivial. A 240×240 screen sounds small, but it still requires a meaningful amount of memory to render properly.
 
-Why this matters:
+That creates a constant tension:
 
-* You cannot treat this like an ESP32
-* You must design around memory limits
+> the display wants memory, and the ESP8266 does not have much of it.
 
-### Key message 2
+This is why so many initial attempts fail. The natural instinct is to treat it like a modern embedded system, allocate buffers, use large fonts, redraw frequently. On this device, that approach leads straight to crashes, boot loops, or a screen that just flickers black.
 
-The device is powerful, but **fragile if misconfigured**.
+The wiring itself also comes with a few quirks. Through community reverse engineering, the common mapping looks like this:
 
----
+* `GPIO14` → SPI clock
+* `GPIO13` → SPI MOSI
+* `GPIO0` / `GPIO2` → display control (DC / RESET)
+* `GPIO5` → backlight (PWM)
 
-## **3. The Real Work: Community Reverse Engineering**
+One detail that catches people off guard is the lack of a proper chip select line. Because of that, the display only behaves correctly when the SPI bus is configured in a specific mode (`mode3`). This is not documented anywhere official, it’s something the community figured out by trial and error.
 
-### Purpose 3
+And that pattern repeats across the entire device.
 
-Acknowledge where the solution actually came from.
+Nothing here is particularly complex, but almost nothing is documented either. Every working configuration is the result of small discoveries layered on top of each other.
 
-### Include references
+The important takeaway is that this is not a forgiving platform. You don’t have the headroom to brute-force your way through problems. Every decision, buffer size, font size, update interval, has a direct impact on stability.
 
-* YouTube baseline:
-  * S1Q9PZ95SDM (<https://www.youtube.com/watch?v=S1Q9PZ95SDM>)
-* Forum thread:
-  * Home Assistant Community thread (<https://community.home-assistant.io/t/installing-esphome-on-geekmagic-smart-weather-clock-smalltv-pro/618029/7>)
-
-### Explain
-
-* The official docs are not enough
-* The device is not supported out-of-the-box
-* Most knowledge comes from:
-
-  * trial and error
-  * shared configs
-  * pin mapping discoveries
-  * driver changes (`ili9xxx` → `mipi_spi`)
-
-### Highlight key learnings from the thread
-
-* `spi_mode: mode3` is mandatory
-* `color_depth: 8` is required
-* buffer management is critical
-* ESP8266 display = constrained rendering
-
-### Key message 3
-
-This project stands on **community knowledge, not documentation**.
+Once you understand those constraints, the device becomes predictable and surprisingly capable. Until then, it just looks like it’s broken.
 
 ---
 
-## **4. Making It Work: ESPHome + Home Assistant Integration**
+## 3. The Real Work: Community Reverse Engineering
 
-### Purpose 4
+If you try to approach this device using only official documentation, you won’t get very far.
 
-Explain how the system actually works once everything is wired correctly.
+There is no proper datasheet for the product as a whole (although there is a [GH repo](https://github.com/GeekMagicClock/smalltv-ultra) with some manuals). There is no “supported ESPHome configuration.” There isn’t even a clear description of how the display is wired internally. What exists instead is a long trail of people experimenting, breaking things, and slowly converging on what works.
 
-### Architecture to describe
+The starting point for me was a [YouTube video from Maker HQ](https://www.youtube.com/watch?v=S1Q9PZ95SDM), which provides a basic working configuration. This video was really useful because it gave me a [working config file as a starting point](https://www.dropbox.com/scl/fi/9t175rsb23n8anikfplcg/ultratv.yaml?rlkey=au79zg7flndf2dz2g2uq598v4&e=1&dl=0). Without it, the proper way to set the display parameters becomes a guessing game. It gets the screen to light up and things to render, but it doesn’t explain why certain settings matter or what happens when you deviate from them.
+
+The real work happened in the [forum thread on the Home Assistant Community](https://community.home-assistant.io/t/installing-esphome-on-geekmagic-smart-weather-clock-smalltv-pro/618029/7).
+
+That thread is long, messy, and full of partial solutions, but it’s also where most of the important details were uncovered. Not in a single place, but spread across dozens of posts. You don’t read it linearly, you piece it together.
+
+A few of the key findings that came out of that effort:
+
+* The display works reliably only with `spi_mode: mode3`
+* The newer `mipi_spi` driver behaves better than older alternatives
+* `color_depth: 8` is effectively mandatory on ESP8266
+* Full buffering is not viable, partial buffers must be used
+* Small mistakes in configuration lead to hard crashes, not soft failures
+
+None of these are obvious if you just look at ESPHome documentation. They only become clear when you see multiple people hitting the same issues and gradually narrowing down the causes. Another important detail is that there isn’t a single “correct” configuration. There are working configurations, but they depend on trade-offs:
+
+* stability vs visual quality
+* buffer size vs responsiveness
+* font size vs memory usage
+
+That’s why copying a YAML file blindly often doesn’t work. Small differences, even something like a slightly larger font, can push the device over the edge.
+
+Take a look at the result on my side: <https://gist.github.com/andremmfaria/7d060df2771cc90815e220d1a5440b85>
+
+This is one of those cases where the community didn’t just provide examples. It effectively reverse engineered the behavior of the device through collective experimentation. Without that, this would have been a dead end.
+
+---
+
+## 4. Making It Work: ESPHome + Home Assistant Integration
+
+Once the display is stable, the problem shifts from “how do I make this work” to “what do I actually want it to show.”
+
+In my case, the answer was straightforward: I wanted a simple network status panel that still functioned as a desk clock.
+
+The architecture ended up being very simple, given that i already had the UniFi integration on HomeAssistant:
 
 ```text
 UniFi Dream Machine → Home Assistant → ESPHome → Display
 ```
 
-### Components involved
+The key decision here was to let Home Assistant do all the heavy lifting.
 
-* Home Assistant sensors:
+Instead of pushing data via MQTT or building custom logic on the ESP8266, I used the `homeassistant:` platform in ESPHome to pull values directly. That means the device is not calculating anything complex, it’s just rendering whatever Home Assistant already knows.
 
-  * WAN status
-  * RX / TX totals
-  * Upload / download speeds
-  * External IP
-  * uptime
-* ESPHome:
+![Image](geekmagic-home-assistant-dashboard.jpg)
 
-  * pulls data via `homeassistant:` platform
-  * renders UI via display lambda
+The data flowing into the display includes:
 
-### Key design decisions
+* WAN status (up/down)
+* External IP address
+* Total data received and sent
+* Current download and upload speeds
+* Uptime
 
-* No MQTT needed (direct HA API)
-* Stateless display (no caching logic)
-* Rendering every ~15 seconds
+All of these come from existing Home Assistant entities. The ESP simply reads them and turns them into text on the screen.
 
-### Explain transformations
+That approach keeps the system simple and, more importantly, stable.
 
-* Uptime (seconds → human readable)
-* Bytes → KB / MB / GB
-* Speeds → relabeled (Kib/s)
+There are still a few transformations that need to happen locally, but they are lightweight:
 
-### Key message 4
+* Uptime arrives as raw seconds → converted into days/hours/minutes
+* Byte counters → converted into KB/MB/GB for readability
+* Speed values → relabeled to match expected units
 
-The ESP8266 is not computing — it is **rendering a view of Home Assistant state**.
+Nothing here is computationally heavy. It’s mostly formatting. This is important, because the ESP8266 doesn’t have much headroom. The more logic you move out of it, the more reliable the system becomes.
+
+Rendering is done using a display lambda, updated every 15 seconds. That interval is deliberate. Faster updates are possible, but they start to introduce timing warnings and unnecessary load. Slower updates keep things smooth and predictable.
+
+Another small but important choice was avoiding unnecessary state. The device does not cache values, track deltas, or maintain history. It simply redraws the current state each cycle. That makes it effectively stateless:
+
+* if Home Assistant updates, the display reflects it
+* if the ESP reboots, it just reconnects and resumes
+
+No synchronization problems, no drift, no edge cases. In the end, the ESP8266 isn’t acting like a smart device. It’s acting like a very small, very focused display terminal for Home Assistant. And that’s exactly what makes it work.
 
 ---
 
-## **5. The UI: Constraints Drive Design**
+## 5. The UI: Constraints Drive Design
 
-### Purpose 5
+Once everything is wired and talking properly, the next question is simple: what should this actually look like?
 
-Explain how limitations shaped the interface.
+That’s where the constraints start shaping everything.
 
-### Constraints
+A 240×240 screen sounds like enough space, but it fills up quickly. Add to that the ESP8266 limitations, limited RAM, slow redraws, and occasional watchdog warnings, and you’re not designing freely anymore. You’re designing within a tight box.
 
-* 240×240 screen
-* Limited RAM → no full framebuffer
-* Slow rendering warnings (~150ms)
-* Font size vs layout trade-offs
+Early on, it becomes clear that you can’t treat this like a modern UI. There’s no room for heavy layouts, large assets, or frequent updates. Even small changes, like increasing font sizes or adding extra text, can have a noticeable impact on performance.
 
-### Design choices
+So the layout has to be intentional.
 
-* Large time (primary function)
-* Date aligned opposite (visual balance)
-* WAN + IP split across screen
-* Minimal redraw complexity
-* No images, only primitives
-
-### Show layout concept
+The final structure ended up being simple and functional:
 
 ```text
-[ TIME          DATE ]
-[ WAN UP        IP  ]
----------------------
-[ Down / Up ]
-[ RX / TX  ]
----------------------
-[ Uptime   ]
+[ TIME            DATE ]
+[ WAN STATUS      IP   ]
+-----------------------
+[ Down / Up            ]
+[ RX / TX              ]
+-----------------------
+[ Uptime               ]
 ```
 
-### Explain trade-offs
+The time is the primary element, so it gets the largest font and the most visual weight. The date sits opposite it, using the same horizontal space to balance the layout without competing for attention.
 
-* Alignment vs clipping
-* font_large vs font_medium compromises
-* right-aligned text complexity in ESPHome
+Below that, the WAN status and IP address are split across the screen. This was a deliberate choice. Keeping them on the same line but on opposite sides avoids clutter while still grouping related information together.
 
-### Key message 5
+The middle section is purely data:
 
-The UI is not aesthetic-first.
-It is **performance-constrained engineering**.
+* download and upload speeds
+* total received and transmitted data
+
+These are aligned in a predictable way, so your eyes don’t need to search. Labels on the left, values on the right. No surprises.
+
+At the bottom, uptime sits on its own, separated by a line. It’s useful, but not something you need to glance at constantly, so it gets the least visual emphasis.
+
+The biggest trade-offs showed up in small details:
+
+* Large fonts improve readability, but reduce available space
+* Right-aligned text looks better, but is slightly more expensive to render
+* Frequent updates feel “live,” but increase CPU load
+
+Even color choices matter. Bright colors for data, white for labels, muted tones for separators. Not for aesthetics alone, but to keep the information readable at a glance.
+
+There’s also no use of images or complex graphics. Everything is drawn using basic primitives, text, lines, and simple shapes. Not because it looks better, but because it’s cheaper to render and more stable over time.
+
+The end result isn’t flashy, but it doesn’t need to be. It’s fast enough, stable enough, and clear enough to do its job.
+
+And on a device like this, that’s the real definition of a good UI.
 
 ---
 
-## **6. What This Became (and Why It’s Better Than a Clock)**
+## 6. What This Became (and Why It’s Better Than a Clock)
 
-### Purpose 6
+At some point, this stopped being about fixing a device and started becoming something else entirely.
 
-Close the article with reflection and value.
+I set out to get a clock. What I ended up with is a small, always-on display that reflects the state of my network in real time.
 
-### Contrast
+The difference is subtle, but important.
 
-What you wanted:
+A clock is passive. It shows time, maybe the weather, and that’s it. This device, once integrated with Home Assistant, becomes part of the system. It reacts to changes, reflects status, and gives you information you didn’t realize you wanted in that form.
 
-* Simple clock
-* Wi-Fi sync
-* Set-and-forget
+Right now, it shows:
 
-What you got:
+* time and date
+* WAN status
+* external IP
+* live bandwidth usage
+* total traffic
+* uptime
 
-* Fully programmable display
-* Real-time network monitor
-* Home Assistant integration node
-* Extendable platform
+But that’s just a starting point.
 
-### Expand possibilities
+Because it’s running ESPHome, it can be extended in any direction:
 
-* Add alerts (WAN down flashing)
-* Add MQTT control
-* Add pages / screens
-* Add touch or button interaction (if hardware allows)
-* Extend to other dashboards (weather, sensors, etc.)
+* flash the screen when WAN goes down
+* display alerts or notifications
+* switch between different pages of data
+* integrate other sensors from Home Assistant
+* react to events instead of just polling
 
-### Reflection angle
+None of that requires changing the hardware. It’s all software.
 
-* Accidental complexity → intentional system
-* Consumer device → infrastructure component
+What makes this particularly interesting is how accidental it is. The device wasn’t designed to be used this way. It just happens to expose enough of its internals to make it possible.
 
-### Key message 6
+That’s a recurring pattern with these kinds of products. They sit in a space between consumer electronics and development boards. Most people use them as intended. A few people look inside and realize they can do much more. This ended up being one of those cases.
 
-This is not a clock anymore.
-It is a **tiny, network-aware dashboard terminal**.
+It’s still sitting on my desk, still acting as a clock. But now it’s also a live view into my network, something I can glance at without opening a dashboard or checking an app. And that’s the part that makes it better.
+
+Not because it’s more complex, but because it’s more useful.
