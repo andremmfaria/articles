@@ -6,7 +6,6 @@ tags:
   - iot
 published: false
 cover_image: 'https://community-assets.home-assistant.io/optimized/4X/7/5/a/75a87e8573336338538dd3a8798ab353358120ef_2_333x250.jpeg'
-id: 3382139
 ---
 
 ## 1. The Unexpected Device
@@ -41,18 +40,18 @@ What I thought was a simple desk accessory turned out to be a small, hackable di
 
 Once you accept that the device is hackable, the next step is understanding what you’re actually working with. And in this case, that means ignoring the marketing entirely and looking at the hardware.
 
-![Image](https://thesolaruniverse.files.wordpress.com/2019/12/056_fig_01_96.jpg?crop=1\&h=504\&w=722)
-
 ![Image](PXL_20260321_152434138.jpg)
 
-![Image](https://europe1.discourse-cdn.com/arduino/optimized/4X/f/5/1/f51e737d9ccba8abab1d8e7d6d0bce4cab720401_2_690x453.jpeg)
-
-Internally, the device is very simple:
+In this device's case, the chip is soldered on the board with the other components and cannot be removed easily. Otherwise, the device is very simple:
 
 * an ESP8266
 * a 240×240 ST7789 TFT display
 * SPI wiring between them
 * a PWM-controlled backlight
+
+Like this:
+
+![Image](https://thesolaruniverse.files.wordpress.com/2019/12/056_fig_01_96.jpg?crop=1\&h=504\&w=722)
 
 There’s no extra compute layer, no buffering chip, no hidden abstraction. Everything you draw goes straight through the ESP8266 to the display. That simplicity is both the reason this works and the reason it can fail so easily.
 
@@ -111,8 +110,6 @@ None of these are obvious if you just look at ESPHome documentation. They only b
 
 That’s why copying a YAML file blindly often doesn’t work. Small differences, even something like a slightly larger font, can push the device over the edge.
 
-Take a look at the result on my side: <https://gist.github.com/andremmfaria/7d060df2771cc90815e220d1a5440b85>
-
 This is one of those cases where the community didn’t just provide examples. It effectively reverse engineered the behavior of the device through collective experimentation. Without that, this would have been a dead end.
 
 ---
@@ -143,9 +140,9 @@ The data flowing into the display includes:
 * Current download and upload speeds
 * Uptime
 
-All of these come from existing Home Assistant entities. The ESP simply reads them and turns them into text on the screen.
+All of these come from existing Home Assistant entities. The ESP simply reads them and turns them into text on the screen. That approach keeps the system simple and, more importantly, stable.
 
-That approach keeps the system simple and, more importantly, stable.
+Take a look at the result on this gist: <https://gist.github.com/andremmfaria/7d060df2771cc90815e220d1a5440b85>
 
 There are still a few transformations that need to happen locally, but they are lightweight:
 
