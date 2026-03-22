@@ -7,6 +7,7 @@ tags:
 published: true
 cover_image: 'https://community-assets.home-assistant.io/optimized/4X/7/5/a/75a87e8573336338538dd3a8798ab353358120ef_2_333x250.jpeg'
 id: 3382166
+date: '2026-03-22T03:46:30Z'
 ---
 
 ## 1. The Unexpected Device
