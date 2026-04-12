@@ -7,6 +7,7 @@ tags:
 published: true
 cover_image: 'https://i.ytimg.com/vi/lRTQ0NsXMuw/maxresdefault.jpg'
 id: 3491881
+date: '2026-04-12T23:51:02Z'
 ---
 
 ## 1. The Original Inspiration
