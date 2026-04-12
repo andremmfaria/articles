@@ -6,6 +6,7 @@ tags:
   - iot
 published: false
 cover_image: 'https://i.ytimg.com/vi/lRTQ0NsXMuw/maxresdefault.jpg'
+id: 3491881
 ---
 
 ## 1. The Original Inspiration
