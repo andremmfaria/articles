@@ -6,6 +6,7 @@ tags:
   - iot
 published: false
 cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Building%20a%20Python%20Display%20Framework%20for%20Raspberry%20Pi%20OLED%20Screens/cover-raspberry-pi-oled.jpg'
+id: 3491881
 ---
 
 ## 1. The Original Inspiration
