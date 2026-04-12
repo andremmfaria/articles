@@ -4,7 +4,7 @@ tags:
   - python
   - raspberrypi
   - iot
-published: false
+published: true
 cover_image: 'https://i.ytimg.com/vi/lRTQ0NsXMuw/maxresdefault.jpg'
 id: 3491881
 ---
@@ -78,6 +78,8 @@ The OLED module connects directly to the Raspberry Pi GPIO header using four wir
 | VCC      | Pin 1         | 3.3V power  |
 | SCL      | Pin 5         | I2C clock   |
 | SDA      | Pin 3         | I2C data    |
+
+![SSD1306 OLED display wired to a Raspberry Pi GPIO header](ssd1306_wiring.png)
 
 Before running anything, I2C must be enabled on the Pi. Use `raspi-config` → Interface Options → I2C, or add `dtparam=i2c_arm=on` to `/boot/firmware/config.txt`. After enabling I2C, verify the display is detected:
 
