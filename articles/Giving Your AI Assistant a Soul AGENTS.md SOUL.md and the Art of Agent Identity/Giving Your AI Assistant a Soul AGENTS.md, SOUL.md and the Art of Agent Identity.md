@@ -8,6 +8,7 @@ tags:
   - agents
   - openclaw
 id: 3642546
+date: '2026-05-10T00:38:46Z'
 ---
 
 ## 1. The Problem with Generic Assistants
