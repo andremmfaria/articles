@@ -4,9 +4,9 @@ description: 'How a handful of markdown files turn a generic AI model into a spe
 published: true
 tags:
   - ai
-  - homelab
   - automation
   - agents
+  - openclaw
 id: 3642546
 ---
 
