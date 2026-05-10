@@ -1,7 +1,7 @@
 ---
 title: 'Giving Your AI Assistant a Soul: AGENTS.md, SOUL.md and the Art of Agent Identity'
 description: 'How a handful of markdown files turn a generic AI model into a specialist team and why character is load-bearing infrastructure, not decoration.'
-published: false
+published: true
 tags:
   - ai
   - homelab
@@ -51,23 +51,23 @@ Beyond the workspace files, agents also have access to a set of tools and data s
 
 ## 3. SOUL.md: Why Character is Load-Bearing
 
-The first instinct is to treat SOUL.md as cosmetic. A personality sprinkle on top of the real work. It isn't, and Anthropic's own writing on [Claude's character](https://www.anthropic.com/research/claude-character) makes the argument clearly:
+The first instinct is to treat `SOUL.md` as cosmetic. A personality sprinkle on top of the real work. It isn't, and Anthropic's own writing on [Claude's character](https://www.anthropic.com/research/claude-character) makes the argument clearly:
 
 > *"The traits and dispositions of AI models have wide-ranging effects on how they act in the world. They determine how models react to new and difficult situations."*
 
 Character is what fills the gaps when there's no explicit rule. A model without defined character defaults to the path of least resistance, which is usually some form of helpful corporate blandness that hedges everything, agrees with the user, and never pushes back. Technically present, practically useless.
 
-My SOUL.md defines the agent as decisive (one recommendation with a reason, not three options with caveats), as having a spine (disagree when the premise is wrong, once, clearly, without lecturing), and as genuinely curious about the specific context it operates in. It also defines the relationship to me: it knows I appreciate elegance, that I'll notice bad writing, that a historical analogy lands as well as a technical explanation. That specificity is what separates a collaborator from a generic assistant.
+My `SOUL.md` defines the agent as decisive (one recommendation with a reason, not three options with caveats), as having a spine (disagree when the premise is wrong, once, clearly, without lecturing), and as genuinely curious about the specific context it operates in. It also defines the relationship to me: it knows I appreciate elegance, that I'll notice bad writing, that a historical analogy lands as well as a technical explanation. That specificity is what separates a collaborator from a generic assistant.
 
-Writing a good SOUL.md is less about listing personality traits and more about writing the prompt in the voice you want the model to adopt. If you want decisive, write decisively. If you want dry wit, use it. The model will mirror the register of its own system prompt more than it will follow explicit instructions to "be funny" or "be direct". Show, don't tell. If you want inspiration, the [dontriskit/awesome-ai-system-prompts](https://github.com/dontriskit/awesome-ai-system-prompts) repository has leaked and reverse-engineered prompts from Manus, Perplexity, Claude, GPT-4o, and others. It's a good way to see how production systems handle tone, refusals, and persona before writing your own.
+Writing a good `SOUL.md` is less about listing personality traits and more about writing the prompt in the voice you want the model to adopt. If you want decisive, write decisively. If you want dry wit, use it. The model will mirror the register of its own system prompt more than it will follow explicit instructions to "be funny" or "be direct". Show, don't tell. If you want inspiration, the [dontriskit/awesome-ai-system-prompts](https://github.com/dontriskit/awesome-ai-system-prompts) repository has leaked and reverse-engineered prompts from Manus, Perplexity, Claude, GPT-4o, and others. It's a good way to see how production systems handle tone, refusals, and persona before writing your own.
 
 ---
 
 ## 4. AGENTS.md, USER.md and Memory: The Operational Layer
 
-Where SOUL.md answers *who*, AGENTS.md answers *how*. It defines the session startup sequence, the gates on external actions that require confirmation, and for a multi-agent setup, the delegation rules. The most consequential part of mine is a simple table mapping task types to the right specialist: research goes to the researcher, hard reasoning goes to the thinker, code goes to the craftsman. When I ask the main agent to look something up, it doesn't do it itself. It spawns the right sub-agent, waits for the result, and synthesises the response. AGENTS.md is where that behaviour lives. The pattern is similar to what [oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent) implements for OpenCode, where agents like Sisyphus, Prometheus and Hephaestus each have defined roles and delegation rules. The difference is that here everything is portable markdown rather than tied to a specific coding harness.
+Where `SOUL.md` answers *who*, `AGENTS.md` answers *how*. It defines the session startup sequence, the gates on external actions that require confirmation, and for a multi-agent setup, the delegation rules. The most consequential part of mine is a simple table mapping task types to the right specialist: research goes to the researcher, hard reasoning goes to the thinker, code goes to the craftsman. When I ask the main agent to look something up, it doesn't do it itself. It spawns the right sub-agent, waits for the result, and synthesises the response. `AGENTS.md` is where that behaviour lives. The pattern is similar to what [oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent) implements for OpenCode, where agents like Sisyphus, Prometheus and Hephaestus each have defined roles and delegation rules. The difference is that here everything is portable markdown rather than tied to a specific coding harness.
 
-USER.md is the file most people skip and shouldn't. It's a persisted description of who you are and how you work: timezone, interests, communication style, what gets results and what wastes time. Without it, the agent rediscovers you every session. With it, it starts already knowing you. Mine is three sections: what I care about technically, what I care about outside of tech (literature, history, scenic arts), and my communication preferences. The model reads this before it reads anything I type, which means it already has context on who it's talking to before the conversation begins.
+`USER.md` is the file most people skip and shouldn't. It's a persisted description of who you are and how you work: timezone, interests, communication style, what gets results and what wastes time. Without it, the agent rediscovers you every session. With it, it starts already knowing you. Mine is three sections: what I care about technically, what I care about outside of tech (literature, history, scenic arts), and my communication preferences. The model reads this before it reads anything I type, which means it already has context on who it's talking to before the conversation begins.
 
 The memory system runs alongside this in two layers. Daily session notes go into `memory/YYYY-MM-DD.md`, raw logs of decisions made, things discovered, work done. Periodically, the agent reviews those and distils them into `MEMORY.md`, removing stale entries and keeping what's worth carrying forward. It's the same pattern a human uses: take notes during the day, review and update your mental model later. Files do what neurons can't across session restarts.
 
@@ -75,7 +75,7 @@ The memory system runs alongside this in two layers. Daily session notes go into
 
 ## 5. Building a Specialist Team
 
-The workspace file approach scales naturally to multiple agents. Each specialist gets its own workspace directory with its own SOUL.md and AGENTS.md, defining a narrower identity and a more focused operational loop. The main agent handles conversation. The orchestrator breaks complex work into parallel workstreams. The specialists execute. This is the same model that agentic frameworks like [LangGraph](https://github.com/langchain-ai/langgraph) and [AutoGen](https://github.com/microsoft/autogen) implement programmatically, except here the "agent definition" is just a markdown file rather than a class or graph node.
+The workspace file approach scales naturally to multiple agents. Each specialist gets its own workspace directory with its own `SOUL.md` and `AGENTS.md`, defining a narrower identity and a more focused operational loop. The main agent handles conversation. The orchestrator breaks complex work into parallel workstreams. The specialists execute. This is the same model that agentic frameworks like [LangGraph](https://github.com/langchain-ai/langgraph) and [AutoGen](https://github.com/microsoft/autogen) implement programmatically, except here the "agent definition" is just a markdown file rather than a class or graph node.
 
 I'm running this on GitHub Copilot because it happens to be what I have access to, but none of what follows is Copilot-specific. OpenClaw supports any AI provider out of the box, including Amazon Bedrock, Anthropic Claude directly, Google Gemini, OpenAI, local models via Ollama, and others. The workspace file pattern works the same regardless of what's underneath. Swap the provider, keep the markdown.
 
@@ -96,15 +96,15 @@ The model choices are deliberate and benchmark-driven. The researcher uses `gpt-
 
 A mistake I made early: I gave the orchestrator `claude-opus-4.7` because it felt like the "best" model. It's also 15x the cost multiplier of sonnet on Copilot. The right model for each agent depends on what it actually does and how it benchmarks on that task, not on name recognition. Similarly, I initially made the orchestrator the default agent. That's backwards. The orchestrator is a workhorse, not a receptionist. The main agent should be the stable conversational interface, and the orchestrator is something it calls when the work genuinely needs coordination.
 
-The SOUL.md and AGENTS.md for each specialist are written to fit the model underneath. The craftsman's SOUL.md emphasises exploring before coding, running before reporting success, logging technical gotchas. The thinker's SOUL.md emphasises restating problems, listing assumptions, steelmanning opposing views. Each file shapes the model's behaviour in ways that fit what that model is actually good at, which means the team's parts are genuinely differentiated rather than just renamed copies of each other.
+The `SOUL.md` and `AGENTS.md` for each specialist are written to fit the model underneath. The craftsman's `SOUL.md` emphasises exploring before coding, running before reporting success, logging technical gotchas. The thinker's `SOUL.md` emphasises restating problems, listing assumptions, steelmanning opposing views. Each file shapes the model's behaviour in ways that fit what that model is actually good at, which means the team's parts are genuinely differentiated rather than just renamed copies of each other.
 
 ---
 
 ## 6. What This Actually Gets You
 
-Five markdown files are the difference between a stateless AI tool and something that genuinely feels like a collaborator. SOUL.md gives the model a character that holds under pressure. AGENTS.md gives it operational discipline. USER.md gives it a relationship. MEMORY.md gives it continuity. Together they turn a session into something cumulative rather than disposable.
+Five markdown files are the difference between a stateless AI tool and something that genuinely feels like a collaborator. `SOUL.md` gives the model a character that holds under pressure. `AGENTS.md` gives it operational discipline. `USER.md` gives it a relationship. `MEMORY.md` gives it continuity. Together they turn a session into something cumulative rather than disposable.
 
-The thing I didn't expect is how much the specificity matters. A SOUL.md that says "be helpful and direct" does almost nothing. A SOUL.md that says "this person thinks in infrastructure, appreciates elegance, will notice bad writing, and doesn't need things explained twice" changes the model's behaviour in ways that are immediately obvious in conversation. The model is working with the context you gave it, and the more precisely you describe your actual situation, the more precisely it can calibrate.
+The thing I didn't expect is how much the specificity matters. A `SOUL.md` that says "be helpful and direct" does almost nothing. A `SOUL.md` that says "this person thinks in infrastructure, appreciates elegance, will notice bad writing, and doesn't need things explained twice" changes the model's behaviour in ways that are immediately obvious in conversation. The model is working with the context you gave it, and the more precisely you describe your actual situation, the more precisely it can calibrate.
 
 None of this requires anything exotic. Just markdown, deliberate thought about who each agent is, and the discipline to keep those files honest as you learn what actually works.
 
