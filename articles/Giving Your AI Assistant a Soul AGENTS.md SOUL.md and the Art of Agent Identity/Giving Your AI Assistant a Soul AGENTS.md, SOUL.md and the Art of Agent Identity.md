@@ -7,6 +7,7 @@ tags:
   - homelab
   - automation
   - agents
+id: 3642546
 ---
 
 ## 1. The Problem with Generic Assistants
