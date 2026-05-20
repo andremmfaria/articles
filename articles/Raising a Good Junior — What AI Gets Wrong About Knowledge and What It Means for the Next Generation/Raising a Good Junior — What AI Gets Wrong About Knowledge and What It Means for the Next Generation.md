@@ -1,6 +1,6 @@
 ---
-title: "Raising a Good Junior — What AI Gets Wrong About Knowledge and What It Means for the Next Generation"
-description: "A reflection on tacit knowledge, the apprenticeship model, and what it means to raise a child in a world where AI is a de facto tool."
+title: Raising a Good Junior — What AI Gets Wrong About Knowledge and What It Means for the Next Generation
+description: 'A reflection on tacit knowledge, the apprenticeship model, and what it means to raise a child in a world where AI is a de facto tool.'
 published: false
 tags:
   - ai
@@ -8,6 +8,7 @@ tags:
   - engineering
   - softskills
 date: '2026-05-20'
+id: 3712038
 ---
 
 I came across an article recently — [The Tacit Dimension](https://cekrem.github.io/posts/the-tacit-dimension/) by Christian Ekrem — that made me put my phone down. Not because it was wrong, but because it was pointing at something real and uncomfortable, and because it immediately made me think about my son.
