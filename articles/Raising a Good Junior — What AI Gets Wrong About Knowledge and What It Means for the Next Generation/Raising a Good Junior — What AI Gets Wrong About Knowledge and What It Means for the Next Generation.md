@@ -9,6 +9,7 @@ tags:
   - engineering
   - softskills
 id: 3712038
+date: '2026-05-20T23:16:30Z'
 ---
 
 A friend of mine, Jose, sent me a conversation he'd had with an AI assistant about an article he'd been reading. The article was [The Tacit Dimension](https://cekrem.github.io/posts/the-tacit-dimension/) by Christian Ekrem. Jose's observation was sharp: he'd been frustrated by the same thing the article describes, AI assistants that produce confident output without surfacing any of the reasoning behind it, the implicit design decisions staying implicit. The conversation he shared was good enough that I went and read the article itself.
