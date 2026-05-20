@@ -2,6 +2,7 @@
 title: 'Giving Your AI Assistant a Soul: AGENTS.md, SOUL.md and the Art of Agent Identity'
 description: 'How a handful of markdown files turn a generic AI model into a specialist team and why character is load-bearing infrastructure, not decoration.'
 published: true
+cover_image: 'https://images.unsplash.com/photo-1729335312288-59e42add82e2?w=1200&auto=format&fit=crop&q=80'
 tags:
   - ai
   - automation

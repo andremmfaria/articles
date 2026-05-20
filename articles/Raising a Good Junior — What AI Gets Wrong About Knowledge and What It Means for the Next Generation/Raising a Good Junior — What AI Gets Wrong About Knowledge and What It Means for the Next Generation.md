@@ -1,7 +1,8 @@
 ---
-title: 'Raising a Good Junior: What AI Gets Wrong About Knowledge and What It Means for the Next Generation'
-description: 'A reflection on tacit knowledge, the apprenticeship model, and what it means to raise a child in a world where AI is a de facto tool.'
-published: false
+title: "Raising a Good Junior: What AI Gets Wrong About Knowledge and What It Means for the Next Generation"
+description: "A reflection on tacit knowledge, the apprenticeship model, and what it means to raise a child in a world where AI is a de facto tool."
+published: true
+cover_image: 'https://images.unsplash.com/photo-1758687126445-98edd4b15ba6?w=1200&auto=format&fit=crop&q=80'
 tags:
   - ai
   - education
