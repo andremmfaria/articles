@@ -11,7 +11,9 @@ date: '2026-05-20'
 id: 3712038
 ---
 
-I came across an article recently — [The Tacit Dimension](https://cekrem.github.io/posts/the-tacit-dimension/) by Christian Ekrem — that made me put my phone down. Not because it was wrong, but because it was pointing at something real and uncomfortable, and because it immediately made me think about my son.
+A friend of mine, Jose, sent me a conversation he'd had with an AI assistant about an article he'd been reading. The article was [The Tacit Dimension](https://cekrem.github.io/posts/the-tacit-dimension/) by Christian Ekrem. Jose's observation was sharp — he'd been frustrated by the same thing the article describes: AI assistants that produce confident output without surfacing any of the reasoning behind it, the implicit design decisions staying implicit. The conversation he shared was good enough that I went and read the article itself.
+
+It made me put my phone down. Not because it was wrong, but because it was pointing at something real and uncomfortable, and because it immediately made me think about my son.
 
 The article builds on Michael Polanyi's 1966 claim: *we can know more than we can tell*. Polanyi's observation was that expert knowledge is structurally tacit. It lives in the body, in practice, in the pattern-recognition accumulated over years of doing a thing. You can't extract it. You can't train a model on it, because it was never written down. And you can't transfer it except by working alongside someone who has it.
 
