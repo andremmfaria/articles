@@ -1,6 +1,6 @@
 ---
-title: "Raising a Good Junior: What AI Gets Wrong About Knowledge and What It Means for the Next Generation"
-description: "A reflection on tacit knowledge, the apprenticeship model, and what it means to raise a child in a world where AI is a de facto tool."
+title: 'Raising a Good Junior: What AI Gets Wrong About Knowledge and What It Means for the Next Generation'
+description: 'A reflection on tacit knowledge, the apprenticeship model, and what it means to raise a child in a world where AI is a de facto tool.'
 published: true
 cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Raising%20a%20Good%20Junior%20%E2%80%94%20What%20AI%20Gets%20Wrong%20About%20Knowledge%20and%20What%20It%20Means%20for%20the%20Next%20Generation/cover-good-junior.jpg'
 tags:
@@ -8,7 +8,6 @@ tags:
   - education
   - engineering
   - softskills
-date: '2026-05-20'
 id: 3712038
 ---
 
