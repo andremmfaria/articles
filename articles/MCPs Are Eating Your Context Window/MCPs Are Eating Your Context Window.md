@@ -8,6 +8,8 @@ tags:
   - automation
   - agents
   - openclaw
+id: 3737058
+date: '2026-05-24T02:53:21Z'
 ---
 
 I was looking at my [OpenClaw](https://openclaw.ai) token usage data when I noticed something odd. The numbers were dominated by cache reads, tens of millions of tokens per week, on a setup where the actual conversations were relatively short. The output tokens, the ones where the model is actually thinking, were a small fraction of the total.
