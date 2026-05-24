@@ -140,8 +140,8 @@ Here's the current team:
 | `librarian` | Pengolodh | Noldorin Elf, Loremaster of Gondolin | gpt-4.1 | Fast docs and API lookups |
 | `writer` | Maglor | Noldorin Elf, greatest singer in Arda | gpt-5.4 | Long-form writing, reports |
 | `scout` | Legolas | Sindar Elf | gpt-5.4-nano | Quick recon, cheap background sweeps |
-| `melian` | Melian | Maia, the Girdle | claude-sonnet-4.6 | Pre-planning: intent classification, hidden requirements |
-| `eonwe` | Eonwe | Maia, Herald of Manwe | gpt-5.4 | Plan reviewer: OKAY or REJECT, max 3 blockers |
+| `preplanner` | Melian | Maia, the Girdle | claude-sonnet-4.6 | Pre-planning: intent classification, hidden requirements |
+| `reviewer` | Eonwe | Maia, Herald of Manwe | gpt-5.4 | Plan reviewer: OKAY or REJECT, max 3 blockers |
 
 A few names worth unpacking for anyone who knows the source material:
 
