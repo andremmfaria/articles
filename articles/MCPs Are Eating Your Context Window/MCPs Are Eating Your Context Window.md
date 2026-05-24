@@ -142,7 +142,9 @@ First-turn context drops from ~41,000 tokens to roughly ~10,000. A 75% reduction
 
 ## 6. What skills look like in practice
 
-A skill is a SKILL.md file with a short frontmatter description and usage instructions. The model reads it when needed:
+A skill is a SKILL.md file with a short frontmatter description and usage instructions. The model reads it when needed. The skill documents three things: how to authenticate, what the primary command pattern is, and what the fallback is when the primary does not cover the full surface.
+
+Here is the TrueNAS skill, which replaced a 278-tool MCP:
 
 ```markdown
 ---
@@ -150,27 +152,157 @@ name: truenas
 description: Manage TrueNAS SCALE: storage (pools, datasets, snapshots), sharing (SMB/NFS), services, VMs, apps, alerts, replication, users.
 ---
 
+## Auth
+
+Credentials come from environment variables injected by the agent framework:
+- TRUENAS_URL: https://truenas.host:50443
+- TRUENAS_API_KEY: API key from TrueNAS UI > Credentials > API Keys
+
 ## Primary: midclt (websocket API)
 
-    midclt -u ws://truenas.host/api/current --api-key "***" call pool.query
+    export PATH="$PATH:/home/user/.local/bin"
+    midclt -u ws://truenas.host:50443/api/current \
+      --api-key "$TRUENAS_API_KEY" call pool.query
 
 ## Fallback: curl REST API
 
     curl -sk -H "Authorization: Bearer $TRUENAS_API_KEY" \
       "$TRUENAS_URL/api/v2.0/pool" | jq .
+
+## Python for complex operations
+
+    import os, sys
+    sys.path.insert(0, '/home/user/.local/lib/python3.14/site-packages')
+    from truenas_api_client import Client
+
+    url = os.environ['TRUENAS_URL'].replace('https://', 'ws://') + '/api/current'
+    with Client(url, api_key=os.environ['TRUENAS_API_KEY']) as c:
+        datasets = c.call('zfs.dataset.query', [], {'select': ['name', 'used', 'available']})
+        for ds in datasets:
+            print(ds['name'], ds['used'])
 ```
 
-The model calls `midclt` or `curl` directly via exec. No middleware. No schema overhead. No per-turn injection.
+The model calls these directly via exec. No middleware. No schema overhead.
 
-For each skill, a `check.sh` verifies that the underlying tools are installed:
+### Environment and credential wiring
+
+The skill patterns above rely on environment variables being available at runtime. Credentials live in the environment, not in the skill file itself. In OpenClaw, env vars are set in `openclaw.json` and injected into every agent turn:
+
+```json
+{
+  "env": {
+    "TRUENAS_URL": "https://truenas.host:50443",
+    "TRUENAS_API_KEY": "your-api-key",
+    "OPNSENSE_HOST": "https://192.168.1.1:8443",
+    "OPNSENSE_API_KEY": "your-key",
+    "OPNSENSE_API_SECRET": "your-secret"
+  }
+}
+```
+
+Other agent frameworks have equivalent mechanisms: `.env` files, secrets stores, or per-agent config blocks. The skill does not care how the variables arrive, only that they exist at runtime.
+
+For services that use OAuth rather than API keys, the approach shifts from env vars to pre-authenticated CLI state.
+
+**GitHub CLI:** `gh` authenticates once via `gh auth login` (OAuth browser flow or a personal access token) and stores credentials in `~/.config/gh/hosts.yml`. After that, every skill call is transparent:
+
+```bash
+# One-time setup (done by the operator, not the agent)
+gh auth login --web
+
+# Skill usage: no credentials in the command
+gh issue list --repo owner/repo --state open --json number,title,labels | jq .
+gh pr create --title "Fix: update deps" --body "Bumps lodash" --base main
+gh api repos/owner/repo/releases | jq '[.[] | {tag_name, published_at}]'
+```
+
+The check.sh for a GitHub skill verifies auth state rather than env vars:
 
 ```bash
 #!/usr/bin/env bash
-command -v midclt &>/dev/null && echo "[truenas] midclt: ok" \
-  || echo "[truenas] WARN: midclt not found. Install: pip install truenas_api_client"
+SKILL_OK=true
+command -v gh &>/dev/null && echo "[github] gh CLI: ok" \
+  || { echo "[github] ERROR: gh not found. Install: https://cli.github.com"; SKILL_OK=false; }
+if command -v gh &>/dev/null; then
+    gh auth status &>/dev/null \
+      && echo "[github] auth: ok" \
+      || { echo "[github] WARN: not authenticated. Run: gh auth login"; SKILL_OK=false; }
+fi
+$SKILL_OK && echo "[github] skill ready" || echo "[github] skill not ready"
 ```
 
-This is the tradeoff: skills shift validation responsibility from the framework to the agent. MCP schemas enforce parameter types before a call is made. With skills, the model constructs the call directly, and errors come back from the CLI or API rather than from the framework. For stable infrastructure, this is a reasonable trade. For production systems with many contributors and rapidly evolving APIs, MCPs may still be the right call.
+**Atlassian (Jira, Confluence):** The community [jira-cli](https://github.com/ankitpokhrel/jira-cli) tool uses an API token stored in a config file at `~/.config/.jira/.config.yml` after a one-time setup:
+
+```bash
+# One-time setup
+jira init
+# prompts for base URL, login email, and API token
+# (generate token at https://id.atlassian.com/manage-profile/security/api-tokens)
+
+# Skill usage
+jira issue list --project MYPROJ --status "In Progress" --plain --no-headers
+jira issue create -tBug -s "Login fails on mobile"
+jira sprint list --project MYPROJ
+```
+
+For Confluence specifically, a short Python script is often cleaner than CLI tools:
+
+```python
+import os
+from atlassian import Confluence
+
+conf = Confluence(
+    url=os.environ['ATLASSIAN_URL'],
+    username=os.environ['ATLASSIAN_EMAIL'],
+    password=os.environ['ATLASSIAN_API_TOKEN'],
+    cloud=True
+)
+
+# Search pages
+results = conf.cql('space = ENG AND text ~ "deployment"', limit=10)
+for page in results['results']:
+    print(page['title'], page['_links']['webui'])
+```
+
+The Python `atlassian-python-api` library covers both Jira and Confluence. Auth is three env vars: URL, email, and API token.
+
+### The pattern that emerges
+
+Across all of these, the same structure repeats:
+
+1. **One-time operator setup**: run the auth flow, generate an API key, or configure a config file. This happens once, outside the skill and outside any agent session.
+2. **Env vars or CLI state at runtime**: credentials arrive as environment variables (for API key auth) or as persistent CLI config files (for OAuth flows). The agent framework injects the former; the operator provisions the latter.
+3. **check.sh validates state before use**: the skill's check script confirms that the CLI is installed and that auth is working. The agent knows before trying whether it has access.
+4. **Skill documents both paths**: a primary path using the best available CLI or library, and a curl or Python fallback for anything the primary does not cover.
+
+For each skill, check.sh verifies both installation and auth:
+
+```bash
+#!/usr/bin/env bash
+# check.sh for a skill with env var auth
+SKILL_OK=true
+
+# Check the CLI
+command -v midclt &>/dev/null && echo "[truenas] midclt: ok" \
+  || { echo "[truenas] WARN: midclt not found. Install: pip install truenas_api_client"; SKILL_OK=false; }
+
+# Check env vars
+[ -n "$TRUENAS_URL" ] && [ -n "$TRUENAS_API_KEY" ] \
+  && echo "[truenas] credentials: ok" \
+  || { echo "[truenas] WARN: TRUENAS_URL or TRUENAS_API_KEY not set"; SKILL_OK=false; }
+
+# Test live connectivity
+VERSION=$(curl -sk --max-time 3 \
+  -H "Authorization: Bearer $TRUENAS_API_KEY" \
+  "$TRUENAS_URL/api/v2.0/system/info" 2>/dev/null \
+  | python3 -c "import json,sys; print(json.load(sys.stdin).get('version','?'))" 2>/dev/null)
+[ -n "$VERSION" ] && echo "[truenas] connectivity: ok (version $VERSION)" \
+  || echo "[truenas] WARN: host not reachable"
+
+$SKILL_OK && echo "[truenas] skill ready" || echo "[truenas] skill not ready"
+```
+
+This is the tradeoff skills introduce: validation responsibility moves from the framework (MCP schema enforcement before every call) to the operator (one-time setup) and check.sh (verified at load time). For stable infrastructure with a single operator, it is a reasonable trade. For production systems with many contributors and rapidly evolving APIs, MCPs may still be the right call.
 
 ---
 
