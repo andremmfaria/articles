@@ -1,5 +1,5 @@
 ---
-title: 'MCPs Are Eating Your Context Window (And What To Do About It)'
+title: MCPs Are Eating Your Context Window (And What To Do About It)
 description: 'How MCP tool schemas silently consume most of your AI agent context on every turn, what that costs at scale, and how lazy-loading skills solve the problem.'
 published: false
 cover_image: ''
@@ -9,6 +9,7 @@ tags:
   - agents
   - openclaw
 date: '2026-05-24T00:00:00Z'
+id: 3736745
 ---
 
 I was looking at my [OpenClaw](https://openclaw.ai) token usage data when I noticed something odd. The numbers were dominated by cache reads, tens of millions of tokens per week, on a setup where the actual conversations were relatively short. The output tokens, the ones where the model is actually thinking, were a small fraction of the total.
