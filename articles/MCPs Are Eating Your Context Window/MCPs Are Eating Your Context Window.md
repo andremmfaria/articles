@@ -204,7 +204,7 @@ All three follow the same pattern: a primary CLI or library path with documented
 
 ---
 
-## 9. Summary
+## 9. Conclusion
 
 MCP servers are a reasonable architecture for giving agents access to external services. The problem is the cost model: every tool schema defined by an active MCP server gets injected with every API call, whether those tools are relevant to the current task or not. As the ecosystem adds more MCP servers (GitHub, Datadog, Atlassian, Stripe, Slack, Sentry, AWS, Kubernetes), the baseline context overhead per message compounds.
 
