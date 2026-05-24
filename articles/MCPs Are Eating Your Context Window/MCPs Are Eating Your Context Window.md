@@ -72,13 +72,8 @@ This is not an OpenClaw issue. It is a consequence of how MCP works architectura
 | Tool | MCP support | Injection pattern | Notes |
 |---|---|---|---|
 | [Claude Code](https://claude.ai/code) | Full native | Eager, every API call | [Issue #44536](https://github.com/anthropics/claude-code/issues/44536): ToolSearch experiment, 85% reduction when enabled |
-| [Cursor](https://cursor.com) | Full | Eager, session start | [Hard limit of 40 tools total](https://forum.cursor.com/t/tools-limited-to-40-total/67976) across all servers |
-| [Windsurf](https://windsurf.com) | Full | Eager, session init | No lazy option documented |
-| [OpenCode](https://opencode.ai) | Full | Eager by default; lazy via [opencode-mcp-tool-search plugin](https://lobehub.com/mcp/francisco-m001-opencode-mcp-tool-search) | Same underlying problem; community plugin fixes it |
-| [Cline / RooCode](https://github.com/cline/cline) | Full | Eager, per turn | Standard MCP protocol behavior |
 | [Codex CLI](https://github.com/openai/codex) | Full | Eager, per turn | Used in [Datadog + Codex integration examples](https://techcommunity.microsoft.com/blog/appsonazureblog/get-started-with-datadog-mcp-server-in-azure-sre-agent/4497123) |
-| [Claude Desktop](https://claude.ai) | Full native | Eager, every turn | Same as Claude Code |
-| [Aider](https://aider.chat) | None yet | n/a | [Issue #3314 open](https://github.com/Aider-AI/aider/issues/3314); no native MCP as of May 2026 |
+| [OpenCode](https://opencode.ai) | Full | Eager by default; lazy via [opencode-mcp-tool-search plugin](https://lobehub.com/mcp/francisco-m001-opencode-mcp-tool-search) | Same underlying problem; community plugin fixes it |
 | OpenClaw | Full | Eager, per turn | What this article is about |
 
 The MCP spec itself requires the tools array to be sent with each API call. The only documented escape valve is "ToolSearch", a meta-tool that lets the model search for tools by name rather than receiving all schemas upfront. Claude Code introduced this experimentally, with a [reported 85% token reduction](https://github.com/anthropics/claude-code/issues/44536). GitHub MCP reduced its default toolset from 101 to 52 tools specifically in response to [user complaints about context overhead](https://github.com/github/github-mcp-server/discussions/1182).
@@ -93,17 +88,12 @@ On a flat-rate plan like GitHub Copilot, this overhead is invisible. You pay a f
 |---|---|---|---|---|---|
 | [Anthropic](https://www.anthropic.com/pricing) | Claude Sonnet 4.6 | $3.00 | $0.30 | $15.00 | 1M tokens |
 | [Anthropic](https://www.anthropic.com/pricing) | Claude Haiku 4.5 | $1.00 | $0.10 | $5.00 | 200K tokens |
-| [Anthropic](https://www.anthropic.com/pricing) | Claude Opus 4.6 | $5.00 | $0.50 | $25.00 | 1M tokens |
 | [OpenAI](https://openai.com/api/pricing/) | GPT-5 | $1.25 | ~$0.31 | $10.00 | 272K tokens |
 | [OpenAI](https://openai.com/api/pricing/) | GPT-4.1 | $2.00 | $0.50 | $8.00 | 1M tokens |
-| [OpenAI](https://openai.com/api/pricing/) | GPT-4.1 Mini | $0.40 | $0.10 | $1.60 | 1M tokens |
-| [OpenAI](https://openai.com/api/pricing/) | o4-mini | $1.10 | ~$0.28 | $4.40 | 200K tokens |
-| [Google](https://ai.google.dev/pricing) | Gemini 2.5 Pro (under 200K) | $1.25 | ~$0.25 | $10.00 | 1M tokens |
-| [Google](https://ai.google.dev/pricing) | Gemini 2.5 Pro (over 200K) | $2.50 | — | $15.00 | 1M tokens |
+| [Google](https://ai.google.dev/pricing) | Gemini 2.5 Pro | $1.25 | ~$0.25 | $10.00 | 1M tokens |
 | [Google](https://ai.google.dev/pricing) | Gemini 2.5 Flash | $0.30 | — | $2.50 | 1M tokens |
 | [AWS Bedrock](https://aws.amazon.com/bedrock/pricing/) | Claude Sonnet 4.6 | $3.00 | ~$0.30 | $15.00 | 1M tokens |
 | [AWS Bedrock](https://aws.amazon.com/bedrock/pricing/) | Amazon Nova Pro | $0.96 | $0.20 | $3.84 | 300K tokens |
-| [AWS Bedrock](https://aws.amazon.com/bedrock/pricing/) | Amazon Nova Lite | $0.24 | $0.06 | $0.96 | 300K tokens |
 | [Azure OpenAI](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/openai-service/) | GPT-4.1 | ~$2.00 | ~$0.50 | ~$8.00 | 1M tokens |
 | [OpenRouter](https://openrouter.ai/pricing) | (aggregator) | pass-through | model-dependent | pass-through | varies |
 
