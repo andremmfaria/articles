@@ -1,8 +1,8 @@
 ---
 title: MCPs Are Eating Your Context Window (And What To Do About It)
 description: 'How MCP tool schemas silently consume most of your AI agent context on every turn, what that costs across Anthropic, OpenAI, Google, and Bedrock, and how lazy-loading skills fix the problem.'
-published: false
-cover_image: ''
+published: true
+cover_image: 'https://www.kdnuggets.com/wp-content/uploads/bala-context-engineering-3-levels.png'
 tags:
   - ai
   - automation
