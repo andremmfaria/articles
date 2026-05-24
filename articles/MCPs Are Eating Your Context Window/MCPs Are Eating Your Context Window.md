@@ -24,7 +24,7 @@ This article is about what MCP tool schemas actually cost, why most people miss 
 
 [Model Context Protocol](https://modelcontextprotocol.io) is a standard for connecting AI agents to external services. The idea is straightforward: define a set of tools, and the model can call them. OPNsense integration? Here are 133 tools. TrueNAS SCALE? Here are 278. GitHub? Here are 101.
 
-The problem is how those tools reach the model. Every tool ships a JSON schema describing its name, description, parameters, types, enums, and constraints. When an MCP server is active, [every single one of those schemas gets serialised and injected with every API call](https://www.mindstudio.ai/blog/claude-code-mcp-server-token-overhead), whether you are going to use any of them or not. This is not a quirk of any particular client — it is how the MCP spec works. The tools array goes with every request.
+The problem is how those tools reach the model. Every tool ships a JSON schema describing its name, description, parameters, types, enums, and constraints. When an MCP server is active, [every single one of those schemas gets serialised and injected with every API call](https://www.mindstudio.ai/blog/claude-code-mcp-server-token-overhead), whether you are going to use any of them or not. This is not a quirk of any particular client. It is how the MCP spec works. The tools array goes with every request.
 
 Here is what that looks like in practice, measured from my homelab setup:
 
@@ -61,7 +61,7 @@ A few well-known MCP servers to put scale in perspective:
 | [PostgreSQL MCP](https://github.com/modelcontextprotocol/servers/tree/main/src/postgres) | ~5-12 | All | ~1,250-3,000 | MCP reference server |
 | [Kubernetes MCP](https://github.com/strowk/mcp-k8s-go) | ~15-25 | All | ~3,750-6,250 | Community |
 
-A developer running GitHub MCP, Slack MCP, and a Postgres MCP alongside their native tools is starting every single message with roughly **40,000 tokens** of context overhead before they have typed a word. GitHub MCP alone at full capacity burns **64,600 tokens** — consuming 32% of Claude Sonnet's 200K context window before the conversation starts.
+A developer running GitHub MCP, Slack MCP, and a Postgres MCP alongside their native tools is starting every single message with roughly **40,000 tokens** of context overhead before they have typed a word. GitHub MCP alone at full capacity burns **64,600 tokens**, consuming 32% of Claude Sonnet's 200K context window before the conversation starts.
 
 ---
 
@@ -81,7 +81,7 @@ This is not an OpenClaw issue. It is a consequence of how MCP works architectura
 | [Aider](https://aider.chat) | None yet | n/a | [Issue #3314 open](https://github.com/Aider-AI/aider/issues/3314); no native MCP as of May 2026 |
 | OpenClaw | Full | Eager, per turn | What this article is about |
 
-The MCP spec itself requires the tools array to be sent with each API call. The only documented escape valve is "ToolSearch" — a meta-tool that lets the model search for tools by name rather than receiving all schemas upfront. Claude Code introduced this experimentally, with a [reported 85% token reduction](https://github.com/anthropics/claude-code/issues/44536). GitHub MCP reduced its default toolset from 101 to 52 tools specifically in response to [user complaints about context overhead](https://github.com/github/github-mcp-server/discussions/1182).
+The MCP spec itself requires the tools array to be sent with each API call. The only documented escape valve is "ToolSearch", a meta-tool that lets the model search for tools by name rather than receiving all schemas upfront. Claude Code introduced this experimentally, with a [reported 85% token reduction](https://github.com/anthropics/claude-code/issues/44536). GitHub MCP reduced its default toolset from 101 to 52 tools specifically in response to [user complaints about context overhead](https://github.com/github/github-mcp-server/discussions/1182).
 
 ---
 
@@ -130,7 +130,7 @@ The alternative is skills. In OpenClaw and in tools like [oh-my-openagent](https
 A skill entry in the context looks like this:
 
 ```
-truenas: Manage TrueNAS SCALE — storage, sharing, services, VMs, alerts, replication.
+truenas: Manage TrueNAS SCALE: storage, sharing, services, VMs, alerts, replication.
 ```
 
 That is roughly 24 tokens. Compare that to the ~27,800 tokens for the TrueNAS MCP schema.
@@ -157,7 +157,7 @@ A skill is a SKILL.md file with a short frontmatter description and usage instru
 ```markdown
 ---
 name: truenas
-description: Manage TrueNAS SCALE — storage (pools, datasets, snapshots), sharing (SMB/NFS), services, VMs, apps, alerts, replication, users.
+description: Manage TrueNAS SCALE: storage (pools, datasets, snapshots), sharing (SMB/NFS), services, VMs, apps, alerts, replication, users.
 ---
 
 ## Primary: midclt (websocket API)
@@ -216,7 +216,7 @@ All three follow the same pattern: a primary CLI or library path with documented
 
 ## 9. Summary
 
-MCP servers are a reasonable architecture for giving agents access to external services. The problem is the cost model: every tool schema defined by an active MCP server gets injected with every API call, whether those tools are relevant to the current task or not. As the ecosystem adds more MCP servers — GitHub, Datadog, Atlassian, Stripe, Slack, Sentry, AWS, Kubernetes — the baseline context overhead per message compounds.
+MCP servers are a reasonable architecture for giving agents access to external services. The problem is the cost model: every tool schema defined by an active MCP server gets injected with every API call, whether those tools are relevant to the current task or not. As the ecosystem adds more MCP servers (GitHub, Datadog, Atlassian, Stripe, Slack, Sentry, AWS, Kubernetes), the baseline context overhead per message compounds.
 
 On flat-rate plans, this is invisible. Under per-token billing, it is a significant and growing cost that starts before any work has been done.
 
@@ -226,7 +226,7 @@ The numbers from this setup: 44,500 tokens saved per turn, a 75% reduction in ba
 
 ---
 
-> **A note on GitHub Copilot:** Copilot Pro+ at $39/month is a flat rate that absorbs all token volume. If you stay within the request limits, this overhead is financially invisible. The analysis in this article applies to direct API usage with Anthropic, OpenAI, Google, AWS Bedrock, or any other pay-per-token provider. If you are on Copilot and not planning to switch, the context window fill rate argument still applies — you hit context limits sooner — but the cost argument does not, until Copilot's usage-based transition completes.
+> **A note on GitHub Copilot:** Copilot Pro+ at $39/month is a flat rate that absorbs all token volume. If you stay within the request limits, this overhead is financially invisible. The analysis in this article applies to direct API usage with Anthropic, OpenAI, Google, AWS Bedrock, or any other pay-per-token provider. If you are on Copilot and not planning to switch, the context window fill rate argument still applies: you hit context limits sooner. But the cost argument does not, until Copilot's usage-based transition completes.
 
 ---
 
