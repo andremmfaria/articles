@@ -6,6 +6,7 @@ tags:
   - opnsense
   - networking
   - homelab
+id: 3831123
 ---
 
 I run a transparent OPNsense bridge between a UniFi Dream Machine Pro and the rest of my LAN. It is deliberately boring at Layer 3: the UDM keeps routing, DHCP, DNS, firewall policy, WAN handling, and VLAN definitions. OPNsense sits inline as a Layer 2 bump in the wire.
