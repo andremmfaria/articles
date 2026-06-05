@@ -100,9 +100,7 @@ With a single Ethernet cable, a physical failure is usually obvious. The link dr
 
 With LACP, a single member can become marginal while the logical aggregate still exists. Some traffic survives. Some traffic lands on the bad member. Some flows stall, some retry, and some keep working. The user-facing symptom becomes "the network is weird", which is among the least useful sentences in infrastructure.
 
-The reason is hashing.
-
-LACP does not normally split one flow across all cables like a striped disk. It assigns flows to member links using a hash. Depending on the device and configuration, that hash may use Layer 2, Layer 3, or Layer 4 fields. In my OPNsense setup, the LAGG hash was Layer 2:
+The reason is hashing. LACP does not normally split one flow across all cables like a striped disk. It assigns flows to member links using a hash. Depending on the device and configuration, that hash may use Layer 2, Layer 3, or Layer 4 fields. In my OPNsense setup, the LAGG hash was Layer 2:
 
 ```text
 laggproto lacp lagghash l2
@@ -123,13 +121,7 @@ This is the central trap: partial LACP failure can masquerade as general network
 
 ## 3. OPNsense Evidence: The Bundle Was Actually Flapping
 
-The strongest evidence came from OPNsense logs in:
-
-```text
-/var/log/system/system_20260605.log
-```
-
-Two windows mattered:
+The strongest evidence came from OPNsense logs in the system log files (`/var/log/system/system_20260605.log`). Two windows mattered:
 
 ```text
 2026-06-05 02:26:32-02:28:01 UTC
@@ -166,9 +158,7 @@ The most useful phrase was:
 Interface stopped DISTRIBUTING, possible flapping
 ```
 
-That is not an application-layer symptom. It is not DNS. It is not an IP routing issue. It is not a firewall rule. It means the LACP member state changed at the link aggregation layer.
-
-A simplified LACP health path looks like this:
+That is not an application-layer symptom. It is not DNS. It is not an IP routing issue. It is not a firewall rule. It means the LACP member state changed at the link aggregation layer. A simplified LACP health path looks like this:
 
 ```text
 Physical carrier up
@@ -182,9 +172,7 @@ Member selected into aggregator
 Member allowed to collect and distribute traffic
 ```
 
-If a member stops distributing, the aggregate may still exist, but it is no longer healthy. The device has decided that member should not transmit traffic as a valid part of the bundle.
-
-The current healthy state after reconnecting the bridge looked like this:
+If a member stops distributing, the aggregate may still exist, but it is no longer healthy. The device has decided that member should not transmit traffic as a valid part of the bundle. The current healthy state after reconnecting the bridge looked like this:
 
 ```text
 lagg0:
@@ -256,9 +244,7 @@ Aggregator ID: ...
 Partner Mac Address: ...
 ```
 
-That is not what the UDM showed.
-
-But the UniFi controller showed a more coherent story.
+That is not what the UDM showed, but the UniFi controller showed a more coherent story.
 
 On the UDM:
 
@@ -301,9 +287,7 @@ The `partner_system_id` is important. It matched the OPNsense `lagg1` MAC:
 e4:3a:6e:5d:a0:00
 ```
 
-That told me the USW was actually negotiating LACP with OPNsense.
-
-The UDM also had `lagd` involved:
+That told me the USW was actually negotiating LACP with OPNsense. The UDM also had `lagd` involved:
 
 ```text
 Created LACP interface mapping: lacp6 -> eth6
@@ -352,32 +336,12 @@ lag0: Failed to send PDU from eth6: Failed to write LACP data: Network is down (
 lag0: Failed to send PDU from eth7: Failed to write LACP data: Network is down (os error 100)
 ```
 
-This is where the investigation stopped being abstract.
+This is where the investigation stopped being abstract. LACP depends on PDUs. If a device cannot send LACP PDUs because the interface is down, or if it drops received LACP PDUs because carrier is down, the aggregate cannot stay stable.
 
-LACP depends on PDUs. If a device cannot send LACP PDUs because the interface is down, or if it drops received LACP PDUs because carrier is down, the aggregate cannot stay stable.
+That is different from: `The two devices disagree about configuration`.
+It is closer to: `The link is physically unstable enough that LACP control traffic cannot reliably move`.
 
-That is different from:
-
-```text
-The two devices disagree about configuration.
-```
-
-It is closer to:
-
-```text
-The link is physically unstable enough that LACP control traffic cannot reliably move.
-```
-
-That points toward physical-layer causes:
-
-- bad cable
-- bad termination
-- damaged connector
-- marginal port
-- electrical noise
-- PHY/link partner issue
-
-The USW counters supported the same direction. The aggregate ports had the worst link-down history:
+That points toward physical-layer causes such as a bad cable, a bad termination, a damaged connector, marginal por, electrical noise or PHY/link partner issue. The USW counters supported the same direction. The aggregate ports had the worst link-down history:
 
 ```text
 USW Port 7:
@@ -471,16 +435,7 @@ USW showed both LACP members active.
 Bridge forwarding and traffic counters looked normal.
 ```
 
-That is a good match.
-
-Other possible causes still existed:
-
-- bad physical port on the USW
-- bad physical port on the OPNsense box
-- UniFi LAG implementation bug triggered by reset/provisioning
-- transient controller reprovisioning issue
-- electrical noise near the cable run
-- two separate faults overlapping
+That is a good match, although other possible causes still existed (like a bad physical port on the USW, bad physical port on the OPNsense box, UniFi LAG implementation bug triggered by reset/provisioning, transient controller reprovisioning issue, electrical noise near the cable run or two separate faults overlapping).
 
 But the cable-pair theory was the simplest explanation that fit the observed data and the successful fix.
 
