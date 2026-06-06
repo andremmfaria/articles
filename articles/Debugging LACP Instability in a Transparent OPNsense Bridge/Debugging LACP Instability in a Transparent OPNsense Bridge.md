@@ -9,9 +9,9 @@ tags:
 id: 3831123
 ---
 
-I run a transparent OPNsense bridge between a UniFi Dream Machine Pro and the rest of my LAN. It is deliberately boring at Layer 3: the UDM keeps routing, DHCP, DNS, firewall policy, WAN handling, and VLAN definitions. OPNsense sits inline as a Layer 2 bump in the wire.
+I run a [transparent OPNsense bridge](https://docs.opnsense.org/manual/other-interfaces.html#bridge) between a UniFi Dream Machine Pro and the rest of my LAN. It is deliberately boring at Layer 3: the UDM keeps routing, DHCP, DNS, firewall policy, WAN handling, and VLAN definitions. OPNsense sits inline as a Layer 2 bump in the wire.
 
-The interesting part is that both sides of that bump use LACP.
+The interesting part is that both sides of that bump use [LACP](https://www.ieee802.org/1/pages/802.1AX-rev.html).
 
 I already wrote the build/configuration guide for this setup here: [Building a Transparent LAGG (LACP) Bridge with OPNsense, UDM, and UniFi - A Practical Guide](https://dev.to/andremmfaria/building-a-transparent-lagg-lacp-bridge-with-opnsense-udm-and-unifi-a-practical-guide-1d21). That article explains how the bridge was built, how the LAGG devices were configured, and why I wanted the firewall to remain transparent.
 
@@ -60,7 +60,7 @@ igc4 + igc5 -> lagg1 -> egresslagg  -> toward USW
 lagg0 + lagg1 -> bridge0 -> laggbridge
 ```
 
-The bridge is a FreeBSD bridge. The aggregates are FreeBSD `lagg(4)` interfaces using LACP.
+The bridge is a FreeBSD bridge. The aggregates are [FreeBSD `lagg(4)`](https://man.freebsd.org/cgi/man.cgi?query=if_lagg&sektion=4) interfaces using LACP. OPNsense exposes those through its [Interfaces > Devices](https://docs.opnsense.org/manual/other-interfaces.html#lagg) UI.
 
 The expected healthy OPNsense state is:
 
@@ -79,7 +79,7 @@ Those three member states matter:
 
 For an LACP link, carrier alone is not enough. A cable can show link, but if the member is not collecting and distributing, it is not a healthy participant in the aggregate.
 
-In a transparent bridge, that distinction matters more than usual. OPNsense is not routing around the problem. It is forwarding Ethernet frames between two aggregated links. If one LACP member misbehaves, the symptoms can leak across the whole Layer 2 segment.
+In a transparent bridge, that distinction matters more than usual. OPNsense is not routing around the problem. It is forwarding Ethernet frames between two aggregated links, much like the [OPNsense bridge documentation](https://docs.opnsense.org/manual/other-interfaces.html#bridge) describes for Layer 2 forwarding and MAC learning. If one LACP member misbehaves, the symptoms can leak across the whole Layer 2 segment.
 
 ## 2. Symptoms: Instability, Not Interruption
 
@@ -98,9 +98,9 @@ This is exactly the sort of fault LACP makes annoying.
 
 With a single Ethernet cable, a physical failure is usually obvious. The link drops. The port goes down. The device disappears.
 
-With LACP, a single member can become marginal while the logical aggregate still exists. Some traffic survives. Some traffic lands on the bad member. Some flows stall, some retry, and some keep working. The user-facing symptom becomes "the network is weird", which is among the least useful sentences in infrastructure.
+With LACP, a single member can become marginal while the logical aggregate still exists. The point of a [Link Aggregation Group](https://www.ieee802.org/1/pages/802.1AX-rev.html) is that multiple full-duplex point-to-point links are treated as one logical link, but the physical members still exist underneath. Some traffic survives. Some traffic lands on the bad member. Some flows stall, some retry, and some keep working. The user-facing symptom becomes "the network is weird", which is among the least useful sentences in infrastructure.
 
-The reason is hashing. LACP does not normally split one flow across all cables like a striped disk. It assigns flows to member links using a hash. Depending on the device and configuration, that hash may use Layer 2, Layer 3, or Layer 4 fields. In my OPNsense setup, the LAGG hash was Layer 2:
+The reason is hashing. LACP does not normally split one flow across all cables like a striped disk. The [FreeBSD handbook](https://docs.freebsd.org/en/books/handbook/advanced-networking/#network-aggregation) notes that Ethernet frame ordering means traffic between two stations stays on the same physical link, while the transmit algorithm tries to distinguish flows and balance them across the aggregate. Depending on the device and configuration, that hash may use Layer 2, Layer 3, or Layer 4 fields. In my OPNsense setup, the LAGG hash was Layer 2:
 
 ```text
 laggproto lacp lagghash l2
@@ -158,7 +158,7 @@ The most useful phrase was:
 Interface stopped DISTRIBUTING, possible flapping
 ```
 
-That is not an application-layer symptom. It is not DNS. It is not an IP routing issue. It is not a firewall rule. It means the LACP member state changed at the link aggregation layer. A simplified LACP health path looks like this:
+That is not an application-layer symptom. It is not DNS. It is not an IP routing issue. It is not a firewall rule. It means the LACP member state changed at the link aggregation layer. A simplified [LACP](https://docs.freebsd.org/en/books/handbook/advanced-networking/#network-aggregation) health path looks like this:
 
 ```text
 Physical carrier up
@@ -201,11 +201,11 @@ bridge0:
     state forwarding
 ```
 
-That contrast matters. During the incident, OPNsense saw real LAGG instability. After remediation, it saw active LACP members and a forwarding bridge.
+That contrast matters. During the incident, OPNsense saw real LAGG instability. After remediation, it saw active LACP members and a forwarding bridge. This matches the healthy FreeBSD example where `ifconfig lagg0` reports `status: active` and member ports with `ACTIVE,COLLECTING,DISTRIBUTING` flags in the [FreeBSD link aggregation documentation](https://docs.freebsd.org/en/books/handbook/advanced-networking/#network-aggregation).
 
 ## 4. UniFi Evidence: Correct Controller State, Weird UDM Internals
 
-The UniFi side complicated the investigation because the UDM Pro did not expose this like a normal Linux LACP bond.
+The UniFi side complicated the investigation because the UDM Pro did not expose this like a normal Linux LACP bond. UniFi's own [Port Aggregation FAQ](https://help.ui.com/hc/en-us/articles/360007279753-Port-Aggregation-FAQs) says static LAG is not supported and aggregation uses LACP, while also calling out that gateway support is limited to specific models including the UDM Pro.
 
 Over SSH, the UDM showed:
 
@@ -234,7 +234,7 @@ The sysfs bonding view was suspicious too:
 /sys/class/net/lag0/operstate          down
 ```
 
-For a normal Linux LACP bond, this would be terrible. I would expect something closer to:
+For a normal [Linux bonding](https://www.kernel.org/doc/html/latest/networking/bonding.html) LACP bond, this would be terrible. Linux bonding documentation describes enslaving interfaces through `/sys/class/net/<bond>/bonding/slaves` and shows `/proc/net/bonding/<bond>` output listing the slave interfaces and their MII status. I would expect something closer to:
 
 ```text
 Bonding Mode: IEEE 802.3ad Dynamic link aggregation
@@ -336,12 +336,12 @@ lag0: Failed to send PDU from eth6: Failed to write LACP data: Network is down (
 lag0: Failed to send PDU from eth7: Failed to write LACP data: Network is down (os error 100)
 ```
 
-This is where the investigation stopped being abstract. LACP depends on PDUs. If a device cannot send LACP PDUs because the interface is down, or if it drops received LACP PDUs because carrier is down, the aggregate cannot stay stable.
+This is where the investigation stopped being abstract. LACP depends on LACPDUs exchanged between the actor and partner; the [Linux bonding documentation](https://www.kernel.org/doc/html/latest/networking/bonding.html) describes the LACPDU exchange used by `802.3ad` mode, and the UniFi FAQ describes LACP as the protocol that helps both ends agree on aggregation settings. If a device cannot send LACP PDUs because the interface is down, or if it drops received LACP PDUs because carrier is down, the aggregate cannot stay stable.
 
 That is different from: `The two devices disagree about configuration`.
 It is closer to: `The link is physically unstable enough that LACP control traffic cannot reliably move`.
 
-That points toward physical-layer causes such as a bad cable, a bad termination, a damaged connector, marginal por, electrical noise or PHY/link partner issue. The USW counters supported the same direction. The aggregate ports had the worst link-down history:
+That points toward physical-layer causes such as a bad cable, a bad termination, a damaged connector, marginal port, electrical noise or PHY/link partner issue. The USW counters supported the same direction. The aggregate ports had the worst link-down history:
 
 ```text
 USW Port 7:
@@ -399,7 +399,7 @@ That lined up with OPNsense seeing final LAG detach events around:
 2026-06-05 21:22:31 UTC
 ```
 
-That distinction matters. The reset caused some link events. The earlier instability was the thing being investigated.
+That distinction matters. The reset caused some link events. The earlier instability was the thing being investigated. This is also why I kept the OPNsense and UniFi timelines separate: link events created by a deliberate reset are not the same kind of evidence as repeated LACP distribution failures before the reset.
 
 After replacing the OPNsense-to-USW cable pair and restoring the bridge, the state became boring again:
 
@@ -472,7 +472,7 @@ ifconfig lagg0
 ifconfig lagg1
 ```
 
-Healthy output:
+Healthy output, matching the examples in the [FreeBSD handbook](https://docs.freebsd.org/en/books/handbook/advanced-networking/#network-aggregation):
 
 ```text
 laggproto lacp
@@ -494,7 +494,7 @@ laggport: igc5 flags=<ACTIVE,COLLECTING,DISTRIBUTING>
 ifconfig bridge0
 ```
 
-Healthy output:
+Healthy output. OPNsense's bridge documentation describes bridges as Layer 2 switching constructs with MAC learning, and optionally [RSTP/STP](https://docs.opnsense.org/manual/other-interfaces.html#bridge) to prevent loops:
 
 ```text
 member: lagg1
@@ -581,6 +581,8 @@ Created LACP interface mapping: lacp7 -> eth7
 ```
 
 ### UniFi controller API: inspect device port state
+
+The controller view should agree with UniFi's [port aggregation model](https://help.ui.com/hc/en-us/articles/360007279753-Port-Aggregation-FAQs): sequential aggregate member ports, LACP rather than static LAG, and forwarding state on the aggregate.
 
 For the USW:
 
