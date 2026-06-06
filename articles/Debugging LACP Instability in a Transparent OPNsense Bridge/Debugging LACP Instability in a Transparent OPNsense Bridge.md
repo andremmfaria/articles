@@ -1,7 +1,8 @@
 ---
 title: Debugging LACP Instability in a Transparent OPNsense Bridge
-published: false
+published: true
 description: A technical postmortem of a transparent OPNsense bridge where LACP instability looked like vague network slowness before the physical-layer evidence became clear.
+cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Debugging%20LACP%20Instability%20in%20a%20Transparent%20OPNsense%20Bridge/cover-lacp-instability.jpg'
 tags:
   - opnsense
   - networking
