@@ -1,7 +1,8 @@
 ---
 title: Debugging LACP Instability in a Transparent OPNsense Bridge
-published: false
+published: true
 description: A technical postmortem of a transparent OPNsense bridge where LACP instability looked like vague network slowness before the physical-layer evidence became clear.
+cover_image: 'https://image.slideserve.com/937021/flap-lag-instability-l.jpg'
 tags:
   - opnsense
   - networking
