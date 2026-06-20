@@ -42,6 +42,8 @@ The workspace for the main agent lives at `~/.openclaw/workspace/` and contains:
     └── YYYY-MM-DD.md   # Raw daily session notes
 ```
 
+A sanitized version of these workspace and agent files is [public on GitHub](https://github.com/andremmfaria/agent-config). The private files — `USER.md`, `TOOLS.md`, and `MEMORY.md` — are deliberately excluded, since they contain personal and environment-specific details that don't generalize. Everything else, the structure, the character files, the operational rules, is there to browse.
+
 These files form the startup context and operating contract. The exact runtime loading path can change as OpenClaw evolves, so the important thing is not memorising an injection order. The important thing is keeping each file's responsibility clear: identity in one place, procedure in another, local facts in another, and long-term memory behind explicit gates.
 
 The total bootstrap budget is capped at 60,000 characters across all files combined, with a per-file default of 12,000. Larger files get truncated silently. The practical implication: every character in these files is a character you're paying for on every single turn. A 12,000-character AGENTS.md injected 1,000 times a month is 12 million characters of context overhead. Discipline about what goes in these files is not just good practice; it's cost management.
@@ -143,6 +145,8 @@ Here's the current OpenClaw team:
 | `preplanner` | Melian | Maia, the Girdle | `openai/gpt-5.4-mini` | Pre-planning: intent classification, hidden requirements |
 | `reviewer` | Eönwë | Maia, Herald of Manwë | `openai/gpt-5.5` | Plan reviewer: OKAY or REJECT, max 3 blockers |
 
+The full sanitized roster is available as [`openclaw/openclaw.json`](https://github.com/andremmfaria/agent-config/blob/main/openclaw/openclaw.json), and each agent's `SOUL.md`, `AGENTS.md`, and `IDENTITY.md` files can be browsed in [`openclaw/agents/`](https://github.com/andremmfaria/agent-config/tree/main/openclaw/agents).
+
 Because I also use Claude Code at work, I keep an equivalent model-tier map for Anthropic. The names and roles stay stable; the provider-specific model labels can change underneath them.
 
 | Agent | OpenAI tier | Anthropic alternative |
@@ -212,5 +216,6 @@ None of this requires anything exotic. Just markdown, deliberate thought about w
 - [LangGraph](https://github.com/langchain-ai/langgraph) - programmatic approach to the same multi-agent patterns
 - [OpenClaw documentation](https://docs.openclaw.ai) - the gateway this setup runs on
 - [GitHub Copilot model multipliers](https://docs.github.com/en/copilot/concepts/billing/copilot-requests#model-multipliers) - if you're using Copilot and care about cost per request
+- [andremmfaria/agent-config](https://github.com/andremmfaria/agent-config) - the sanitized OpenClaw and Claude Code agent files described in this article; `USER.md`, `TOOLS.md`, and `MEMORY.md` are excluded
 
 If you're running a similar setup and want to compare notes, leave a comment below.
