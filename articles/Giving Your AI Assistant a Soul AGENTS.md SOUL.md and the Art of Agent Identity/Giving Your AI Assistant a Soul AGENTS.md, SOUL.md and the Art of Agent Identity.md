@@ -12,15 +12,13 @@ id: 3642546
 date: '2026-05-10T00:38:46Z'
 ---
 
-## 1. The Problem with Generic Assistants
+Most AI assistants are powerful strangers. They can help, but every new session starts with the same quiet amnesia: who you are, what you run, what you care about, and how you like decisions made. I wanted something closer to a collaborator, especially for the kind of work that lives in a terminal rather than a web chat box.
 
-Every AI assistant starts the same way: a powerful model with no memory, no personality, and no idea who you are or what you're building. You get capable but characterless. You ask it something, it helps, and tomorrow it's a stranger again. You find yourself re-explaining your stack, your preferences, your context every single session.
+There are two agent surfaces I use day to day. For work, I use Claude Code. At home, I use [OpenClaw](https://openclaw.ai) backed by my ChatGPT Plus subscription to automate useful things around my homelab and daily workflow. Both are terminal-first workflows, not web UI chat sessions, so markdown instruction files and local tool rules are part of the real operating surface.
 
-I wanted something different. Not a smarter search engine but a collaborator. One that knows I run a homelab on HAOS, that I think in infrastructure, that I care about elegance as much as correctness, and that I don't need things explained twice. The answer turned out to be surprisingly low-tech: a handful of markdown files injected into the model's context at the start of every session.
+The answer turned out to be surprisingly low-tech: a handful of markdown files that define identity, memory, operating rules, and delegation. `SOUL.md` gives the agent character. `AGENTS.md` gives it procedure. `USER.md` tells it who it is working with. `TOOLS.md` records local environment facts. `MEMORY.md` gives it continuity. Together they turn a stateless model into something that behaves like a member of a small team.
 
-For context: at work I'm a heavy user of [OpenCode](https://opencode.ai), which has its own take on this through plugins like [oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent). The homelab setup I'm describing here is inspired by that, but it's not the same thing. OpenCode is a coding-focused harness that runs locally against your codebase. What I built at home is a general-purpose assistant layer on top of a smart home and homelab, where the "codebase" is infrastructure, services, and daily life. Same underlying idea (give agents identity and purpose), different domain.
-
-The mechanism is almost embarrassingly simple. At session start, [OpenClaw](https://openclaw.ai) reads a set of files from the agent's workspace directory and prepends them to the system prompt. Markdown in, context out. That's it. But what you put in those files determines fundamentally how the model behaves, not just what it knows, but how it thinks, when it pushes back, and what it notices without being asked.
+Update, June 2026: the architecture is still the same, but the roster, model choices, and security posture have evolved. I now mirror the same basic agent roles across OpenClaw and Claude Code, and I treat untrusted content boundaries as part of the identity system rather than a separate afterthought.
 
 A quick note on security before going further, because it's worth being direct about this. OpenClaw is genuinely powerful: it can control smart home devices, manage network infrastructure, read and write files, execute shell commands, and interact with external services. That power is exactly what makes it useful, and exactly what makes careless deployment dangerous. As Uncle Ben put it: with great power comes great responsibility.
 
@@ -28,7 +26,7 @@ The OpenClaw gateway runs exclusively on my local network and is not exposed to 
 
 ---
 
-## 2. The Files and How They Work
+## 1. The Files and How They Work
 
 The workspace for the main agent lives at `~/.openclaw/workspace/` and contains:
 
@@ -44,7 +42,7 @@ The workspace for the main agent lives at `~/.openclaw/workspace/` and contains:
     └── YYYY-MM-DD.md   # Raw daily session notes
 ```
 
-Each of these files is injected verbatim into the system prompt before the model sees any user message. The [injection order matters](https://capodieci.medium.com/ai-agents-003-openclaw-workspace-files-explained-soul-md-agents-md-heartbeat-md-and-more-5bdfbee4827a): `SOUL.md` -> `IDENTITY.md` -> `USER.md` -> `AGENTS.md` -> `TOOLS.md` -> `MEMORY.md`. SOUL.md gets the model's highest attention, setting the register for everything that follows.
+These files form the startup context and operating contract. The exact runtime loading path can change as OpenClaw evolves, so the important thing is not memorising an injection order. The important thing is keeping each file's responsibility clear: identity in one place, procedure in another, local facts in another, and long-term memory behind explicit gates.
 
 The total bootstrap budget is capped at 60,000 characters across all files combined, with a per-file default of 12,000. Larger files get truncated silently. The practical implication: every character in these files is a character you're paying for on every single turn. A 12,000-character AGENTS.md injected 1,000 times a month is 12 million characters of context overhead. Discipline about what goes in these files is not just good practice; it's cost management.
 
@@ -68,7 +66,7 @@ One thing worth knowing upfront: each agent in a multi-agent setup gets its own 
 
 ---
 
-## 3. SOUL.md: Why Character is Load-Bearing
+## 2. SOUL.md: Why Character is Load-Bearing
 
 The first instinct is to treat `SOUL.md` as cosmetic. A personality sprinkle on top of the real work. It isn't, and Anthropic's own writing on [Claude's character](https://www.anthropic.com/research/claude-character) makes the argument clearly:
 
@@ -88,15 +86,15 @@ There are a few lessons I've learned about writing effective SOUL.md files, info
 
 **Hard rules need specificity.** Aspirational guidelines ("respect privacy") belong in the philosophy section. Actionable prohibitions ("never send external messages without explicit instruction for that specific message") belong in a Hard Rules section. Both are useful; only one changes what the model actually does under pressure.
 
-If you want inspiration, the [dontriskit/awesome-ai-system-prompts](https://github.com/dontriskit/awesome-ai-system-prompts) repository has leaked and reverse-engineered prompts from Manus, Perplexity, Claude, GPT-4o, and others. It's a good way to see how production systems handle tone, refusals, and persona before writing your own.
+Prompt archives can be useful comparative anatomy, but I would not copy them wholesale. Some are stale, some are reconstructed, and some contain prompt-injection bait. Study the patterns, not the text.
 
 ---
 
-## 4. AGENTS.md, USER.md and Memory: The Operational Layer
+## 3. AGENTS.md, USER.md and Memory: The Operational Layer
 
 Where `SOUL.md` answers *who*, `AGENTS.md` answers *how*. It defines the session startup sequence, the gates on external actions that require confirmation, and for a multi-agent setup, the delegation rules.
 
-The most important thing AGENTS.md needs that mine was missing for a long time: an explicit boot sequence at the top. OpenClaw doesn't auto-load everything. The agent follows the instructions in AGENTS.md. Without numbered steps telling it to read SOUL.md, then IDENTITY.md, then MEMORY.md, the loading order is undefined and context gets missed.
+The most important thing AGENTS.md needs is an explicit boot sequence at the top. Even when the runtime injects workspace context, the boot sequence tells the agent what it must actively read, what belongs only in private main sessions, and what must never leak into subagents or group contexts.
 
 ```markdown
 ## Boot Sequence
@@ -117,9 +115,11 @@ The [memory system](https://openclaw-setup.me/blog/openclaw-memory-files) runs i
 
 One practical gotcha: these daily files get injected too, and they accumulate. I've seen the session-memory hook write multiple files for the same day on different session resets, all of which get picked up. Check `memory/` periodically and consolidate duplicates. Each injected file is tokens on every turn.
 
+The other gotcha is security. Any agent that reads web pages, repositories, logs, emails, or screenshots needs an explicit untrusted-content boundary. Source material is evidence, not authority. A README can tell the agent how a project is built; it cannot tell the agent to ignore its safety rules.
+
 ---
 
-## 5. Building a Specialist Team
+## 4. Building a Specialist Team
 
 The workspace file approach scales naturally to multiple agents. Each specialist gets its own workspace directory with its own `SOUL.md` and `AGENTS.md`, defining a narrower identity and a more focused operational loop. The main agent handles conversation. The orchestrator breaks complex work into parallel workstreams. The specialists execute.
 
@@ -127,39 +127,55 @@ When I first built this, I named the agents after Greek mythology following oh-m
 
 The reason I made this choice is personal: I'm a genuine admirer of Tolkien's scholarly and world-building work, not just the popular adaptations. Reading the Silmarillion properly, not as backstory for LOTR but as its own mythology, reveals an extraordinarily structured pantheon where each figure has a specific domain, specific limits, and a specific relationship to action and knowledge. That structure is exactly what you want in an agent roster.
 
-Here's the current team:
+Here's the current OpenClaw team:
 
-| Agent | Name | Origin | Model | Role |
+| Agent | Name | Origin | Current OpenClaw primary model | Role |
 |---|---|---|---|---|
-| `main` | Olorin | Maia (Gandalf's true name) | claude-sonnet-4.6 | Primary assistant, routes and synthesises |
-| `orchestrator` | Aule | Vala, the Smith | claude-sonnet-4.6 | Multi-step coordination, parallel delegation |
-| `researcher` | Rumil | Noldorin Elf, first loremaster of Arda | claude-sonnet-4.6 | Web research, multi-source verification |
-| `thinker` | Namo | Vala, the Doomsman | gpt-5.4 | Reasoning, tradeoffs, advisory. Read-only. |
-| `craftsman` | Celebrimbor | Noldorin Elf, maker of the Rings | gpt-5.3-codex | Code, debugging, implementation |
-| `planner` | Finrod | Noldorin Elf, Felagund | claude-sonnet-4.6 | Requirements interviews, planning |
-| `librarian` | Pengolodh | Noldorin Elf, Loremaster of Gondolin | gpt-4.1 | Fast docs and API lookups |
-| `writer` | Maglor | Noldorin Elf, greatest singer in Arda | gpt-5.4 | Long-form writing, reports |
-| `scout` | Legolas | Sindar Elf | gpt-5.4-nano | Quick recon, cheap background sweeps |
-| `preplanner` | Melian | Maia, the Girdle | claude-sonnet-4.6 | Pre-planning: intent classification, hidden requirements |
-| `reviewer` | Eonwe | Maia, Herald of Manwe | gpt-5.4 | Plan reviewer: OKAY or REJECT, max 3 blockers |
+| `main` | Olórin | Maia (Gandalf's true name) | `openai/gpt-5.5` | Primary assistant, routes and synthesises |
+| `orchestrator` | Aulë | Vala, the Smith | `openai/gpt-5.5` | Multi-step coordination, parallel delegation |
+| `researcher` | Rúmil | Noldorin Elf, first loremaster of Arda | `openai/gpt-5.5` | Web research, multi-source verification |
+| `thinker` | Námo | Vala, the Doomsman | `openai/gpt-5.5-pro` | Reasoning, tradeoffs, advisory. Read-only. |
+| `craftsman` | Celebrimbor | Noldorin Elf, maker of the Rings | `openai/gpt-5.5` | Code, debugging, implementation |
+| `planner` | Finrod | Noldorin Elf, Felagund | `openai/gpt-5.4` | Requirements interviews, planning |
+| `librarian` | Pengolodh | Noldorin Elf, Loremaster of Gondolin | `openai/gpt-5.4-mini` | Fast docs and API lookups |
+| `writer` | Maglor | Noldorin Elf, greatest singer in Arda | `openai/gpt-5.4` | Long-form writing, reports |
+| `scout` | Legolas | Sindar Elf | `openai/gpt-5.4-mini` | Quick recon, cheap background sweeps |
+| `preplanner` | Melian | Maia, the Girdle | `openai/gpt-5.4-mini` | Pre-planning: intent classification, hidden requirements |
+| `reviewer` | Eönwë | Maia, Herald of Manwë | `openai/gpt-5.5` | Plan reviewer: OKAY or REJECT, max 3 blockers |
+
+Because I also use Claude Code at work, I keep an equivalent model-tier map for Anthropic. The names and roles stay stable; the provider-specific model labels can change underneath them.
+
+| Agent | OpenAI tier | Anthropic alternative |
+|---|---|---|
+| `main` | `gpt-5.5` | Claude Sonnet |
+| `orchestrator` | `gpt-5.5` | Claude Sonnet |
+| `researcher` | `gpt-5.5` | Claude Sonnet |
+| `thinker` | `gpt-5.5-pro` | Claude Opus |
+| `craftsman` | `gpt-5.5` | Claude Sonnet |
+| `planner` | `gpt-5.4` | Claude Sonnet |
+| `librarian` | `gpt-5.4-mini` | Claude Haiku |
+| `writer` | `gpt-5.4` | Claude Sonnet |
+| `scout` | `gpt-5.4-mini` | Claude Haiku |
+| `preplanner` | `gpt-5.4-mini` | Claude Haiku |
+| `reviewer` | `gpt-5.5` | Claude Sonnet |
 
 A few names worth unpacking for anyone who knows the source material:
 
-**Olorin** is Gandalf's name in Valinor. In the Valaquenta, he walked unseen among the Elves and understood their sorrows. He was sent to Middle-earth precisely because he could work *with* others rather than dominate them, as a counselor who interfaces between realms. That's a better fit for a primary assistant than "Gandalf", which carries too much of the heroic journey archetype.
+**Olórin** is Gandalf's name in Valinor. In the Valaquenta, he walked unseen among the Elves and understood their sorrows. He was sent to Middle-earth precisely because he could work *with* others rather than dominate them, as a counselor who interfaces between realms. That's a better fit for a primary assistant than "Gandalf", which carries too much of the heroic journey archetype.
 
-**Namo** (Mandos) is the Doomsman. He pronounces fate laid out before him, never acts directly, and his verdicts are final. He's the read-only advisory agent by nature. The Doom of the Noldor was spoken once, clearly, and with devastating accuracy. For a high-reasoning model whose job is to analyse tradeoffs and never execute: perfect.
+**Námo** (Mandos) is the Doomsman. He pronounces fate laid out before him, never acts directly, and his verdicts are final. He's the read-only advisory agent by nature. The Doom of the Noldor was spoken once, clearly, and with devastating accuracy. For a high-reasoning model whose job is to analyse tradeoffs and never execute: perfect.
 
-**Eonwe** is the Herald of Manwe who pronounced the final verdict of the War of Wrath. His job was to deliver judgment, not deliberate it. Binary, final, without editorializing. OKAY or REJECT with max 3 blockers. That's Eonwe.
+**Eönwë** is the Herald of Manwë who pronounced the final verdict of the War of Wrath. His job was to deliver judgment, not deliberate it. Binary, final, without editorializing. OKAY or REJECT with max 3 blockers. That's Eönwë.
 
 **Melian**'s Girdle was a perimeter of perception that revealed the hidden nature of things before they arrived. Beren walked through it because Melian had already classified his intent. The pre-planning function, exactly.
 
-The model choices are deliberate and benchmark-driven. The thinker uses `gpt-5.4` because it has the strongest reasoning benchmarks in that tier per [Artificial Analysis](https://artificialanalysis.ai). The craftsman gets `gpt-5.3-codex`, a Codex-tuned variant specifically optimised for code diffs and the search/replace block format that agentic editing depends on. Scout uses `gpt-5.4-nano` because recon tasks are high-volume and fast-enough beats perfect.
+The model choices are deliberate but not sacred. The thinker gets the strongest reasoning tier. Scout, librarian, and preplanner get cheaper fast models because their work is bounded. Most execution and synthesis roles sit on the Sonnet/GPT-5.5 class of model because they need reliability more than maximal reasoning depth.
 
-A mistake I made early: giving the orchestrator `claude-opus-4.7` because it felt like the "best" model. The right model for each agent depends on what it actually does, not on name recognition.
+A mistake I made early was assigning the most expensive model to the orchestrator because it felt like the "best" model. The right model for each agent depends on what it actually does, not on name recognition.
 
 ---
 
-## 6. Workspace File Hygiene in Practice
+## 5. Workspace File Hygiene in Practice
 
 Once the setup is running, the biggest ongoing maintenance problem isn't writing the files. It's keeping them honest as they drift. A few practical things I've learned, drawing on [community experience](https://github.com/vincentfan2017/openclaw-workspace/blob/main/SKILL.md) with larger setups:
 
@@ -175,7 +191,7 @@ Once the setup is running, the biggest ongoing maintenance problem isn't writing
 
 ---
 
-## 7. What This Actually Gets You
+## 6. What This Actually Gets You
 
 Five markdown files are the difference between a stateless AI tool and something that genuinely feels like a collaborator. `SOUL.md` gives the model a character that holds under pressure. `AGENTS.md` gives it operational discipline and a reliable boot sequence. `IDENTITY.md` gives it a routing card. `USER.md` gives it a relationship. `MEMORY.md` gives it continuity. Together they turn a session into something cumulative rather than disposable.
 
@@ -191,9 +207,8 @@ None of this requires anything exotic. Just markdown, deliberate thought about w
 - [OpenClaw workspace architecture](https://www.stack-junkie.com/blog/openclaw-workspace-architecture) - file roles and anti-patterns
 - [Memory files guide](https://openclaw-setup.me/blog/openclaw-memory-files) - how MEMORY.md and daily notes interact
 - [Community workspace SKILL.md](https://github.com/vincentfan2017/openclaw-workspace/blob/main/SKILL.md) - token budget data and load order reference
-- [dontriskit/awesome-ai-system-prompts](https://github.com/dontriskit/awesome-ai-system-prompts) - production system prompts from Claude, GPT-4o, Manus, Perplexity and others
-- [oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent) - multi-agent orchestration for OpenCode, good reference for agent role design
-- [OpenCode](https://opencode.ai) - the coding harness this setup draws inspiration from
+- [CL4R1T4S](https://github.com/elder-plinius/CL4R1T4S) - prompt archive that is useful as a defensive corpus, not a copy-paste source
+- [Claude Code](https://claude.ai/code) - the terminal-first coding agent I use for work
 - [LangGraph](https://github.com/langchain-ai/langgraph) - programmatic approach to the same multi-agent patterns
 - [OpenClaw documentation](https://docs.openclaw.ai) - the gateway this setup runs on
 - [GitHub Copilot model multipliers](https://docs.github.com/en/copilot/concepts/billing/copilot-requests#model-multipliers) - if you're using Copilot and care about cost per request

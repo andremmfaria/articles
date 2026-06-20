@@ -2,6 +2,7 @@
 title: Hardening AI Agents Against Prompt Injection with Boring Markdown
 description: How a hostile prompt archive turned into a practical hardening pass across OpenClaw and Claude Code agent instructions.
 published: false
+cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Hardening%20AI%20Agents%20Against%20Prompt%20Injection%20with%20Boring%20Markdown/cover-prompt-injection-hardening.jpg'
 tags:
   - ai
   - security
