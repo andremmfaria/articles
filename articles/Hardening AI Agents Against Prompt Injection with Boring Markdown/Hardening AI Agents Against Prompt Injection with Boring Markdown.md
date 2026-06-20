@@ -2,6 +2,7 @@
 title: Hardening AI Agents Against Prompt Injection with Boring Markdown
 description: How a hostile prompt archive turned into a practical hardening pass across OpenClaw and Claude Code agent instructions.
 published: false
+cover_image: 'https://synergyadditive.com/wp-content/uploads/2025/03/Shaft-Laser-Hardening-2.jpg'
 tags:
   - ai
   - security
