@@ -9,6 +9,7 @@ tags:
   - agents
   - openclaw
 id: 3951255
+date: '2026-06-21T00:10:05Z'
 ---
 
 In a [previous article](https://dev.to/andremmfaria/giving-your-ai-assistant-a-soul-agentsmd-soulmd-and-the-art-of-agent-identity-52dn), I wrote about giving my AI assistant a durable identity with `AGENTS.md`, `SOUL.md`, memory files, and a team of specialist agents. The point was practical: use OpenClaw to automate useful things around my homelab and daily workflow without every session starting from zero.
