@@ -161,9 +161,9 @@ Once you are logged in, the agent is ready. You will see something like a prompt
 
 ---
 
-## 6. Three things to try first
+## 6. Four things to try first
 
-Here are three tasks that work well for beginners. None of them require coding knowledge. Each one shows a different kind of thing a terminal agent can do that a web chat box cannot.
+Here are four tasks that work well for beginners. None of them require coding knowledge. Each one shows a different kind of thing a terminal agent can do that a web chat box cannot.
 
 ### 1. Summarize a folder of files
 
@@ -176,6 +176,19 @@ Summarize every text file in this folder and give me a one-paragraph overview of
 ```
 
 The agent will read each file and give you a digest. This alone is worth the install.
+
+You do not actually have to move into the folder first. Instead of using `cd`, you can just tell the agent which folder to look in by handing it the **path** (the address of a folder on your computer). A path comes in two flavors:
+
+- A **full path** spells out the complete address from the top of your drive. On macOS it looks like `/Users/yourname/Documents/notes`. On Windows it looks like `C:\Users\yourname\Documents\notes`.
+- A **relative path** is shorter and is read relative to wherever you currently are in the terminal. If you are already sitting in your Documents folder, `./notes` points at the `notes` subfolder inside it, and `../taxes` points at a `taxes` folder one level up.
+
+So instead of changing folders, you can simply ask:
+
+```text
+Summarize every text file in /Users/yourname/Documents/notes and give me a one-paragraph overview of each.
+```
+
+Just make sure the path you give is correct. The agent looks exactly where you point it, so a full path leaves no room for confusion, while a relative path is quicker once you know where you are.
 
 ### 2. Find and fix a recurring typo
 
@@ -196,6 +209,16 @@ Explain this to me like I've never worked in finance: [paste the text here]
 ```
 
 The agent has the same language model under the hood as the web version, but now it can also reach out to your local files if you point it at them. Same brains, more reach.
+
+### 4. Fetch a web page, summarize it and write the result on disk
+
+The agent is not limited to files on your computer. Give it a web address (a URL) and it can fetch the page and summarize it for you, which is handy for a long article, a documentation page, or release notes you do not feel like reading in full.
+
+```text
+Fetch https://en.wikipedia.org/wiki/Transmission_Control_Protocol, give me a summary of it I can understand it without a networking background, and write it to my downloads folder.
+```
+
+The agent reads the live page and hands back the digest and writes it on the Downloads folder on you home folder (e.g. `C:/Users/yourname/Downloads` or `/Users/yourname/Downloads`). One caution worth keeping in mind: a web page is content you did not write, so treat anything it tells the agent to do with healthy suspicion. That is exactly the topic of the next safety section.
 
 ---
 
@@ -240,8 +263,12 @@ claude -c
 If this worked and you are curious about going further:
 
 - **The first article in this series** explains how to give your agent a persistent identity across sessions, covering memory files, character files, and why that matters: [Giving Your AI Assistant a Soul](https://dev.to/andremmfaria/giving-your-ai-assistant-a-soul-agentsmd-soulmd-and-the-art-of-agent-identity-52dn).
-- **The second article** covers hardening the agent against malicious content that tries to manipulate it, relevant once you start pointing the agent at files and web pages you did not create.
+- **The second article** covers hardening the agent against malicious content that tries to manipulate it, relevant once you start pointing the agent at files and web pages you did not create: [Hardening AI Agents Against Prompt Injection with Boring Markdown](https://dev.to/andremmfaria/hardening-ai-agents-against-prompt-injection-with-boring-markdown-3jb).
 - **Official documentation** is always more current than any article. Install steps and auth flows change. When in doubt: [Claude Code docs](https://code.claude.com/docs/en/setup) and [Codex CLI docs](https://developers.openai.com/codex/cli).
+
+There is one more step that I think is where these agents really earn their keep, and it is the thing I personally use them for most. Once you have other command-line tools installed, the agent can drive them for you. Tools like the GitHub CLI (`gh`), the AWS CLI (`aws`), or an issue-tracker CLI such as `acli` are themselves just programs you run in the terminal, and the agent can run them on your behalf. That means you can say something like "open a pull request with my changes and a sensible description" and the agent translates it into the right `gh` commands, instead of you memorizing the flags. Plain English becomes the front end for the tools you already use.
+
+That is genuinely powerful, and it is also where the safety habits from the section above matter most, because now the agent can act on your code, your cloud account, and your tickets. It is enough of a topic that I am giving it its own follow-up article rather than cramming it in here. For this guide, it is enough to know the door exists.
 
 The terminal is less intimidating than it looks. You now know how to open it, install a tool, sign in, and ask for something useful. That is the whole foundation. Everything else is just practice.
 
