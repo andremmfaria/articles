@@ -8,6 +8,7 @@ tags:
   - agents
   - cli
   - security
+id: 3979775
 ---
 
 In the [first article in this series](https://dev.to/andremmfaria/giving-your-ai-assistant-a-soul-agentsmd-soulmd-and-the-art-of-agent-identity-52dn), I gave my agent a durable identity: memory files, a character file, a roster of specialists. In the [second](https://dev.to/andremmfaria/hardening-ai-agents-against-prompt-injection-with-boring-markdown-3jb), I hardened that agent against prompt injection, because an agent that can act is also an agent that can be manipulated.
