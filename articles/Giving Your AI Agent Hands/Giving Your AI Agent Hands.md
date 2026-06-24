@@ -212,7 +212,7 @@ Full Claude Code permissions reference: [code.claude.com/docs/en/permissions](ht
 
 ## 5. Skills: turning a repeated ask into a reusable capability
 
-The three examples in section 3 are things I do regularly. Typing the same prompt variations every time is tedious and inconsistent. Claude Code has a feature built for exactly this: Skills.
+The three examples in section 3 are things I do regularly. Typing the same prompt variations every time is tedious and inconsistent. Claude Code has a feature built for exactly this: Skills. I am using Claude Code as the example throughout this section, but the feature is not unique to it; the other agent CLIs have their own equivalents, which I list at the end.
 
 A **Skill** is a `SKILL.md` file with YAML frontmatter and a markdown body describing the task. Here is a minimal example for the PR creation workflow:
 
@@ -238,6 +238,24 @@ allowed-tools: Bash(git log *) Bash(git diff *) Bash(gh pr create *)
 
 The `allowed-tools` frontmatter pre-approves the listed commands for this skill. When the skill runs, those specific commands do not prompt, because I have already made the trust decision at definition time rather than at execution time. That is the key difference from just typing the same prompt every session: the permission scope is packaged with the task description, versioned alongside your project, and applied consistently.
 
+Skills are not limited to git and cloud tools. Another one I lean on wraps [pandoc](https://pandoc.org), the universal document converter, so I can turn a markdown report into a polished PDF without remembering its flags:
+
+```yaml
+---
+name: md-to-pdf
+description: Convert a markdown file to a PDF using pandoc
+allowed-tools: Bash(pandoc *)
+---
+
+## Instructions
+
+1. Run `pandoc` to convert the given markdown file to PDF, choosing a sensible PDF engine.
+2. If pandoc reports a missing PDF engine, tell me what to install rather than guessing.
+3. Show me the output path once the file is written.
+```
+
+The shape is identical to the PR skill: a description so the agent knows when to reach for it, a tight `allowed-tools` list so it can only run `pandoc`, and a few plain-language steps. The full pandoc options live in its [manual](https://pandoc.org/MANUAL.html); the point of the skill is that I never have to open it.
+
 **Discovery:** Claude auto-detects skills by fuzzy-matching the `description` field when you describe a task. If I say "create a PR for this branch," it may recognize the skill without me naming it. I can also invoke it explicitly with `/create-pr`.
 
 **Where skills live and their precedence:**
@@ -250,7 +268,9 @@ Precedence goes Enterprise over Personal over Project. A personal skill with the
 
 **When to use a skill vs a one-off prompt:** a skill makes sense when you have done the same thing three or more times and know the shape of it. The PR workflow, the S3 audit, the weekly status update: those are skills. An exploratory ask where you are not sure what you want yet is better as a direct prompt. Do not over-skill; a skill you never invoke is just noise in your config.
 
-Skills reference: [code.claude.com/docs/en/skills](https://code.claude.com/docs/en/skills).
+Skills, as described here, are a Claude Code feature, but the idea is not exclusive to it. If you use a different agent, look for its own reusable-instruction harness. OpenAI Codex CLI has [AGENTS.md and Agent Skills](https://developers.openai.com/codex/skills), [OpenCode](https://opencode.ai/docs) supports custom commands, rules, and agents, and [Aider](https://aider.chat/docs/) leans on a config file plus coding conventions and in-chat commands. The format differs from tool to tool, but the goal is the same: package a repeatable task, together with the tools it is trusted to run, so you are not reassembling it from scratch every session.
+
+Claude Code Skills reference: [code.claude.com/docs/en/skills](https://code.claude.com/docs/en/skills).
 
 ---
 
