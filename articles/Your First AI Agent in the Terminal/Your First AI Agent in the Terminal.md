@@ -11,7 +11,7 @@ tags:
 id: 3979399
 ---
 
-I have written two articles in this series for people who already use a terminal. One was about [giving an AI assistant a durable identity](https://dev.to/andremmfaria/giving-your-ai-assistant-a-soul-agentsmd-soulmd-and-the-art-of-agent-identity-52dn), covering memory files, character files, the works. The other was about hardening those agents against prompt injection (see my [hardening article](https://dev.to/andremmfaria/hardening-ai-agents-against-prompt-injection-with-boring-markdown-3jb) for the full picture).
+I have written two articles in this series for people who already use a terminal. One was about [giving an AI assistant a durable identity](https://dev.to/andremmfaria/giving-your-ai-assistant-a-soul-agentsmd-soulmd-and-the-art-of-agent-identity-52dn), covering memory files, character files, and the roster of specialist agents I delegate to, like Aulë the orchestrator, Celebrimbor for writing code, and Rúmil for research. The other was about hardening those agents against prompt injection (see my [hardening article](https://dev.to/andremmfaria/hardening-ai-agents-against-prompt-injection-with-boring-markdown-3jb) for the full picture).
 
 After both of those went out, several friends asked the same question in slightly different words: *"This sounds interesting. But I don't use the command line. Where do I even start?"*
 
