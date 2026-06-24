@@ -63,6 +63,8 @@ There are two well-supported terminal AI agents worth knowing about. This guide 
 
 Pick the one that matches an account you already have. Both work well. Both do essentially the same thing at this level.
 
+One more thing before we move on: Claude Code and Codex are not the only choices. Other terminal agents work the same way, including [OpenCode](https://opencode.ai/docs), [OpenClaw](https://docs.openclaw.ai), and [Ollama](https://docs.ollama.com), which runs models locally on your own machine. I am using Claude Code and Codex as the examples in this guide to keep things simple, but if you already prefer one of the others, the steps that follow translate directly.
+
 ---
 
 ## 4. Installing your agent
