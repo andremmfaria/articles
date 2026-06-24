@@ -11,7 +11,7 @@ tags:
 id: 3979775
 ---
 
-In the [first article in this series](https://dev.to/andremmfaria/giving-your-ai-assistant-a-soul-agentsmd-soulmd-and-the-art-of-agent-identity-52dn), I gave my agent a durable identity: memory files, a character file, a roster of specialists. In the [second](https://dev.to/andremmfaria/hardening-ai-agents-against-prompt-injection-with-boring-markdown-3jb), I hardened that agent against prompt injection, because an agent that can act is also an agent that can be manipulated.
+In the [first article in this series](https://dev.to/andremmfaria/giving-your-ai-assistant-a-soul-agentsmd-soulmd-and-the-art-of-agent-identity-52dn), I gave my agent a durable identity: memory files, a character file, and a roster of specialists led by an orchestrator named Aulë that delegates to focused agents like Celebrimbor for writing code, Rúmil for research, and Námo for the harder design calls. In the [second](https://dev.to/andremmfaria/hardening-ai-agents-against-prompt-injection-with-boring-markdown-3jb), I hardened that agent against prompt injection, because an agent that can act is also an agent that can be manipulated.
 
 <!-- TODO: link article #3 once published -->
 In the previous article, *Your First AI Agent in the Terminal*, I walked through getting a terminal agent running from scratch. That one was written for people who had never opened a terminal. This one is written for people who have, and who are wondering what comes next.
