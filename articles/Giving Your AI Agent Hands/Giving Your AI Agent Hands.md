@@ -60,6 +60,8 @@ The agent runs the equivalent query, handles the `jq` parsing or formats the out
 
 That is the model. Plain English is the front end. The flags are the agent's problem.
 
+A note on the agent itself: I use Claude Code and Codex as the examples throughout this article, but the same pattern works with other terminal agents, including [OpenCode](https://opencode.ai/docs), [OpenClaw](https://docs.openclaw.ai), [Aider](https://aider.chat/docs/), and [Ollama](https://docs.ollama.com) for running models locally. The permission and safety mechanics in the next sections are specific to Claude Code and Codex, so check your tool's own docs for the equivalents, but the core idea of letting an agent drive your installed CLIs carries across all of them.
+
 ---
 
 ## 3. Three things I actually rely on
@@ -131,15 +133,15 @@ Summarize my open Jira tickets, group them by status, flag anything blocked,
 and draft a two-paragraph status update I could send to my manager.
 ```
 
-The agent uses `acli` to query my tickets:
+The agent uses `acli` to query my tickets with a JQL filter:
 
 ```bash
-acli jira issue list --assignee currentUser --status "In Progress,To Do,Blocked"
+acli jira workitem list --jql "assignee = currentUser() AND status IN ('In Progress', 'To Do', 'Blocked')"
 ```
 
 It reads the results, groups them, identifies the blocked ones, and writes the draft. I edit it for tone and send it. The whole thing takes two minutes instead of fifteen.
 
-Atlassian CLI installation varies slightly by OS; download the installer from [developer.atlassian.com/cloud/acli/guides/install-acli](https://developer.atlassian.com/cloud/acli/guides/install-acli/) and follow the auth setup for your product.
+The exact subcommand and flags depend on your `acli` version and on whether you are on Jira Cloud or Data Center, so run `acli jira workitem --help` to see what your install supports. Atlassian CLI installation varies slightly by OS; download the installer from [developer.atlassian.com/cloud/acli/guides/install-acli](https://developer.atlassian.com/cloud/acli/guides/install-acli/) and follow the auth setup for your product.
 
 ---
 
@@ -189,18 +191,18 @@ Here is a sane starting config for someone working with `gh`, `aws`, and `git`:
 
 The allow list covers read-only operations that should flow without interruption. The ask list covers mutations that need a human in the loop. The deny list covers things that should never happen without you explicitly overriding.
 
-One nuance worth knowing: `Bash(aws s3api get-*)` matches any command starting with `aws s3api get-` at a word boundary. The more specific allow rules at the top take precedence over the broader `aws *` in the ask list, because evaluation stops at the first match.
+One nuance worth knowing: `Bash(aws s3api get-*)` matches any command starting with `aws s3api get-`. A space before the `*`, as in `Bash(git status *)`, adds a word boundary, so the prefix only matches as a whole word: `Bash(ls *)` matches `ls -la` but not `lsof`, while `Bash(ls*)` would match both. The more specific allow rules at the top take precedence over the broader `aws *` in the ask list, because evaluation stops at the first match.
 
 **Permission modes** give you a global stance independent of the rule list. The useful ones:
 
-- `default`: auto-approves read-only commands. A reasonable baseline.
-- `plan`: read-only, proposes actions without executing them. Good for reviewing what the agent would do before it does it.
+- `default`: reads never prompt, but the agent asks before any file edit or shell command. A reasonable baseline.
+- `plan`: the agent reads files and runs read-only commands to explore, then proposes a plan without editing anything. Good for seeing the approach it intends to take before it touches your files.
 - `auto`: approves most things, with a background safety classifier filtering out high-risk operations. The classifier catches things like production deploys, mass storage deletion, IAM changes, force pushes, and `terraform destroy`. The Anthropic docs note explicitly that auto mode "is not suitable for high-stakes infrastructure without human oversight." That quote is worth keeping in mind.
 - `bypassPermissions`: skips all checks. Only use this inside a container or VM where the blast radius is bounded.
 
 Protected paths that never get auto-approved regardless of mode: `.git`, `.claude`, your shell config files, editor config directories. The circuit breaker on root and home directory deletions also stays active even in permissive modes.
 
-**Codex CLI's approach** is simpler. The interactive `codex` REPL prompts before every command by default. For non-interactive use, `codex exec` supports `--shell-approval never` to skip prompts. OS-native sandboxing is available: Seatbelt on macOS, Bubblewrap on Linux.
+**Codex CLI's approach** is simpler. The interactive `codex` REPL prompts before every command by default. For non-interactive use, `codex exec` runs without prompting, and you bound what it can touch with sandbox levels such as `--sandbox workspace-write` (the restricted default) or `--sandbox danger-full-access`. OS-native sandboxing backs this: Seatbelt on macOS, Bubblewrap on Linux.
 
 The reusable permission configuration in Claude Code (described below) does not have a direct equivalent in Codex CLI. For sophisticated permission setups, Claude Code is currently the better fit.
 
@@ -244,7 +246,7 @@ The `allowed-tools` frontmatter pre-approves the listed commands for this skill.
 - `.claude/skills/<name>/SKILL.md`: project skills, scoped to that repo
 - Enterprise-managed and plugin-provided skills also exist in Claude Code's skill hierarchy
 
-Precedence goes Enterprise over Personal over Project. A personal skill with the same name as a project skill wins. Worth keeping in mind when you share a project with a team.
+Precedence goes Enterprise over Personal over Project. A personal skill with the same name as a project skill wins. Worth keeping in mind when you share a project with a team. Plugin-provided skills sit under their own namespace, so they do not collide with the ones you write.
 
 **When to use a skill vs a one-off prompt:** a skill makes sense when you have done the same thing three or more times and know the shape of it. The PR workflow, the S3 audit, the weekly status update: those are skills. An exploratory ask where you are not sure what you want yet is better as a direct prompt. Do not over-skill; a skill you never invoke is just noise in your config.
 
