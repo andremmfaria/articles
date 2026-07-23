@@ -1,12 +1,14 @@
 ---
 title: Building a Screenless VoIP Phone for a Child
-description: "A small design for a child-friendly phone: big buttons, no screen, restricted calls, and voice messages routed through Home Assistant."
+description: 'A small design for a child-friendly phone: big buttons, no screen, restricted calls, and voice messages routed through Home Assistant.'
 published: true
 tags:
   - homeassistant
   - voip
   - homelab
   - diy
+id: 4213939
+date: '2026-07-23T10:13:33Z'
 ---
 
 I started with a simple idea: I wanted a phone my son could use to reach me or his grandparents.
