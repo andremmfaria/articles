@@ -11,7 +11,7 @@ tags:
 date: '2026-08-10T00:00:00Z'
 id: 4363452
 ---
-In the [previous article](https://dev.to/andremmfaria/improving-the-esp32-wiimote-library-from-prototype-to-production-ready-arduino-library-448e), I wrote about improving the ESP32 Wiimote library. That work was useful on its own. The original library already made it possible to connect a Nintendo Wii Remote to an ESP32 over Bluetooth Classic, but I wanted it to behave more like something you could build a real project on top of, with clearer project structure, better examples, runtime logging, connection state, battery reporting, and Arduino Library Manager support.
+In the [previous article](https://dev.to/andremmfaria/improving-the-esp32-wiimote-library-from-prototype-to-production-ready-arduino-library-448e), I wrote about improving the ESP32 Wiimote library. That work was useful on its own. The original library already made it possible to connect a Nintendo Wii Remote to an ESP32 over Bluetooth Classic, but I wanted it to behave more like something you could build a real project on top of, with clearer structure, better examples, runtime logging, connection state, battery reporting, and Arduino Library Manager support.
 
 At the time, the real reason for doing it was only hinted at. I wanted to use a Wii Remote as a physical controller for Home Assistant. Not as a novelty dashboard nor another app. A real object with real buttons that can sit on a table and trigger automations without unlocking a phone, opening a web UI, or explaining to a voice assistant that no, I did not ask for the living room lamp to become a podcast.
 
@@ -27,7 +27,7 @@ Home Assistant add-on
 Home Assistant automations
 ```
 
-The ESP32 handles the awkward Bluetooth side. Home Assistant handles the useful automation side. MQTT sits between them as the boring, reliable contract. That split is the important part of the design.
+The ESP32 handles the awkward Bluetooth side. Home Assistant handles the useful automation side. MQTT sits between them as the boring, reliable contract. That split is the design decision everything else follows from.
 
 ---
 
@@ -45,7 +45,7 @@ It has a useful collection of inputs and sensors.
 * battery power
 * accelerometer hardware for future gesture work
 
-Most smart home controls are either too abstract or too fragile. Phones are powerful, but they are not good shared controls. Voice assistants are convenient until they mishear you, lose context, or need the cloud to be in a good mood. Wall switches are reliable, but fixed. A Wii Remote sits in a useful middle ground. It is physical, cheap, wireless, programmable, and already designed to be held without looking at it. The buttons are distinct enough that you can build muscle memory around them. For some automations, that matters more than having a beautiful UI.
+Most smart home controls are either too abstract or too fragile. Phones are powerful, but they are not good shared controls. Voice assistants are convenient until they mishear you, lose context, or need the cloud to be in a good mood. Wall switches are reliable, but fixed. A Wii Remote sits in a useful middle ground because it is physical, cheap, wireless, programmable, and already designed to be held without looking at it. The buttons are distinct enough that you can build muscle memory around them. For some automations, that matters more than having a beautiful UI.
 
 For example, a practical mapping could look like this.
 
@@ -80,7 +80,7 @@ That gives the firmware one clean responsibility.
 Bluetooth input -> serial events
 ```
 
-Everything network-related stays on the Home Assistant side, where it is easier to observe, configure, update, and recover.
+Everything network-related stays on the Home Assistant side, where it is easier to observe, configure, update, and recover. The hardware boundary is therefore also the responsibility boundary.
 
 ---
 
@@ -133,9 +133,7 @@ And every ten seconds the firmware emits a heartbeat.
 
 The protocol is line-delimited JSON. One object per line. No binary framing. No custom transport. No cleverness hiding in the walls. That makes it easy to debug with a serial monitor. If the ESP32 is working, you can see the messages before Home Assistant is involved at all. That property is worth more than it looks. When an integration spans Bluetooth, firmware, USB, containers, MQTT, and Home Assistant automations, the ability to isolate one boundary with a serial monitor saves a lot of guessing.
 
-One small firmware detail is worth calling out because it is the kind of thing that makes prototypes feel haunted.
-
-When the Wii Remote first connects, the firmware does not immediately emit button events from the first packet. It captures that first observed state as a baseline. Only after that does it emit transitions. The reason is simple. On connection, you do not want the first read to look like a meaningful change if it is only the controller settling into its initial state. A real automation system should not turn on a light because a Bluetooth controller happened to reconnect.
+One small firmware detail is worth calling out because it is the kind of thing that makes prototypes feel haunted. When the Wii Remote first connects, the firmware does not immediately emit button events from the first packet. It captures that first observed state as a baseline. Only after that does it emit transitions. The reason is simple. On connection, you do not want the first read to look like a meaningful change if it is only the controller settling into its initial state. A real automation system should not turn on a light because a Bluetooth controller happened to reconnect.
 
 The firmware loop is built around that distinction.
 
@@ -163,7 +161,7 @@ The firmware does not need to know what the `A` button does. It only needs to re
 
 ## 4. The Home Assistant Add-on
 
-The other half of the project is a Home Assistant add-on called **WiiMote Bridge**. It is a Python application packaged as an add-on container. Its job is to read the ESP32 serial stream and publish MQTT messages that Home Assistant can consume.
+Once the ESP32 has reduced the controller to a serial event stream, the Home Assistant side can stay ordinary. The other half of the project is a Home Assistant add-on called **WiiMote Bridge**. It is a Python application packaged as an add-on container. Its job is to read the ESP32 serial stream and publish MQTT messages that Home Assistant can consume.
 
 The add-on configuration looks like this.
 
@@ -215,7 +213,7 @@ topic: wiimote/1/button/A
 payload: OFF
 ```
 
-That gives Home Assistant the simplest possible automation trigger. Subscribe to a topic and react to `ON`.
+At this point the Wiimote has become a predictable Home Assistant input. Subscribe to a topic and react to `ON`.
 
 ---
 
@@ -236,9 +234,7 @@ wiimote/1/events/status
 wiimote/device/esp32/events/status
 ```
 
-There are two styles here.
-
-The first style is convenience topics. These are optimized for automations.
+There are two styles here. The first style is convenience topics, optimized for automations.
 
 ```text
 wiimote/1/button/A -> ON
@@ -260,7 +256,7 @@ That means newer firmware events can still be observed even before the add-on gr
 
 ## 6. Home Assistant Discovery, Automations, and Scaling
 
-The first version of this idea could have stopped at raw MQTT automations. That would work.
+Raw MQTT automations are enough to make the bridge useful immediately.
 
 ```yaml
 alias: Toggle living room light from Wii Remote A
@@ -275,7 +271,7 @@ action:
 mode: single
 ```
 
-But a good Home Assistant integration should also feel native once it is installed. So the add-on supports MQTT Discovery.
+That works, but a good Home Assistant integration should also feel native once it is installed. So the add-on supports MQTT Discovery.
 
 When discovery is enabled, it publishes retained discovery topics so Home Assistant creates entities automatically.
 
@@ -328,7 +324,7 @@ B     -> turn the room off
 
 The exact mapping is personal. The important part is that Home Assistant sees the Wii Remote as a stream of deterministic events. Once it is an event stream, it can do anything Home Assistant can do.
 
-The current ESP32 Wiimote stack is effectively one controller per ESP32 radio. That sounds like a limitation, but it is a manageable one.
+The same topic structure also makes scaling straightforward. The current ESP32 Wiimote stack is effectively one controller per ESP32 radio. That sounds like a limitation, but it is a manageable one.
 
 The add-on supports multiple radios in a single instance.
 
@@ -355,7 +351,7 @@ That keeps automations readable. A Wii Remote in the living room and a Wii Remot
 
 ## 7. Failure Modes and Recovery
 
-The full system crosses several boundaries, so recovery behavior matters. The project is designed to make common failures visible.
+Because the full system crosses several boundaries, recovery behavior matters. The project is designed to make common failures visible.
 
 * if the ESP32 boots, it emits a `ready` status
 * if the Wii Remote is not connected, it emits waiting and pairing hints
@@ -386,22 +382,9 @@ But if you run MQTT elsewhere, the host, credentials, transport, and TLS setting
 
 ---
 
-## 8. Project finish and conclusion
+## Conclusion
 
-The bridge currently focuses on button events, connection state, heartbeat, and battery. That is enough to make it useful, but the Wii Remote has more hardware available. The obvious future work is still waiting.
-
-* accelerometer MQTT topics
-* gesture events
-* Home Assistant commands back to the firmware
-* rumble control
-* LED control
-* richer automation blueprints
-
-The accelerometer is the most interesting next step, but also the easiest one to overdo. Raw accelerometer data is noisy. Gesture recognition needs thresholds, timing, and some restraint. A good version should probably expose both raw events and a few interpreted gestures, but not pretend that every flick of the wrist is a meaningful command. For now, buttons are the correct foundation. Buttons are boring. Buttons work.
-
-The previous ESP32Wiimote work made the library usable as a foundation. This project turns that foundation into an actual Home Assistant input device.
-
-The final architecture is deliberately split.
+The previous ESP32Wiimote work made the library usable as a foundation. This project turns that foundation into an actual Home Assistant input device. The final architecture stays deliberately split.
 
 ```text
 Wii Remote
@@ -413,6 +396,17 @@ Wii Remote
 ```
 
 That separation keeps the ESP32 firmware small, keeps Bluetooth away from Home Assistant, and gives the automation layer a simple MQTT contract.
+
+The bridge currently focuses on button events, connection state, heartbeat, and battery. That is enough to make it useful, but the Wii Remote has more hardware available. The obvious future work is still waiting.
+
+* accelerometer MQTT topics
+* gesture events
+* Home Assistant commands back to the firmware
+* rumble control
+* LED control
+* richer automation blueprints
+
+The accelerometer is the most interesting next step, but also the easiest one to overdo. Raw accelerometer data is noisy. Gesture recognition needs thresholds, timing, and some restraint. A good version should probably expose both raw events and a few interpreted gestures, but not pretend that every flick of the wrist is a meaningful command. For now, buttons are the correct foundation. Buttons are boring. Buttons work.
 
 The follow-up project is available here.
 
