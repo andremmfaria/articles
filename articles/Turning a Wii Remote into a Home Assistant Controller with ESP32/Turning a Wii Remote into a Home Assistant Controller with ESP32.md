@@ -9,6 +9,7 @@ tags:
   - mqtt
   - iot
 date: '2026-08-10T00:00:00Z'
+id: 4363452
 ---
 ## 1. From Library Work to a Real Button
 
