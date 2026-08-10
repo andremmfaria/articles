@@ -11,17 +11,11 @@ tags:
 id: 4213939
 date: '2026-07-23T10:13:33Z'
 ---
-This started, as too many projects do, with me watching Instagram Reels.
+This started, as too many projects do, with me watching Instagram Reels. I came across [this Reel](https://www.instagram.com/reel/DZuj9SehAhE) about someone who had bought a [Tin Can](https://tincan.kids/products/tin-can) phone for her daughter, and the shape of it immediately appealed to me. A familiar physical interface, a modern backend, no apps, no games, and very little nonsense exposed to the child.
 
-I came across [this Reel](https://www.instagram.com/reel/DZuj9SehAhE) about someone who had bought a [Tin Can](https://tincan.kids/products/tin-can) phone for her daughter. It is a modern, Wi-Fi-connected landline for kids with approved contacts, no apps, and no games. It had the shape of something I immediately liked, a familiar physical interface, a modern backend, and very little nonsense exposed to the child.
+The bit that got me was the quick-dial trick. If a child-friendly phone can call specific numbers, those numbers do not have to be normal phone numbers. They can be internal service codes. If those codes reach a PBX, pressing a physical button can do something other than place a call.
 
-Later, she found that the quick-dial buttons could be wired to call specific numbers that ran code. That was the bit that got me. If a child-friendly phone can call specific numbers, those numbers do not have to be normal phone numbers. They can be internal service codes. And if an internal service code reaches a PBX, that PBX can do something other than place a call.
-
-That would be an excellent excuse to learn telephony and give my son a screenless interface to the house. Big physical buttons, no tablet, no app, no notifications. Press one button to leave me a message. Press another to leave his mum a message. Later, maybe press a button to play a song, send a "come here" notification, or trigger an automation.
-
-My first instinct was to build the system myself. Some small service, a bit of audio handling, a bit of Home Assistant glue, probably a few evenings of reinventing things that people with switchboards solved before my parents were born. Educational, yes. Sensible, questionable.
-
-Then I found [Asterisk](https://www.asterisk.org/), more specifically, I found the [TECH7Fox Asterisk Home Assistant add-on](https://github.com/TECH7Fox/asterisk-hass-addons), which runs Asterisk inside Home Assistant, and the companion [Asterisk Home Assistant integration](https://github.com/TECH7Fox/asterisk-hass-integration), which connects Home Assistant to Asterisk over AMI. That changed the project from "write a small phone system" to "configure a real PBX". Asterisk could be the call brain in little to no time, and because it was available as a Home Assistant add-on, it already lived where I wanted the automations to live. The "code" would mostly be configuration, SIP endpoints, dialplan rules, recordings, and Home Assistant automations.
+That made the project useful in two directions. I could learn telephony, and my son could get a screenless interface to the house. My first instinct was to build the whole system myself, but then I found [Asterisk](https://www.asterisk.org/) through the [TECH7Fox Asterisk Home Assistant add-on](https://github.com/TECH7Fox/asterisk-hass-addons) and companion [Asterisk Home Assistant integration](https://github.com/TECH7Fox/asterisk-hass-integration). That changed the plan from writing a small phone system to configuring a real PBX.
 
 So the design became almost disappointingly old-fashioned.
 
@@ -272,11 +266,11 @@ For this build, I split responsibilities this way.
 
 I do not make the Home Assistant integration the core path for child button behaviour. That belongs in the Asterisk dialplan. It is lower-level, more deterministic, and less likely to break because a Home Assistant custom integration changed an entity model. Home Assistant should observe and react. Asterisk should decide what a dialled digit means.
 
-## What I tested
+## What I Made
 
-The first useful milestone was not "full telephone system". It was making sure the local safety model worked.
+The first useful milestone was not "full telephone system". It was a local, default-deny phone interface with a handful of deliberately boring behaviours.
 
-| Dialled input            | Expected result                                              |
+| Dialled input            | Behaviour                                                    |
 | ------------------------ | ------------------------------------------------------------ |
 | `1`                    | Play Dad prompt, beep, record WAV                            |
 | `2`                    | Play Mum prompt, beep, record WAV                            |
@@ -288,9 +282,7 @@ The first useful milestone was not "full telephone system". It was making sure t
 | random multi-digit input | Reject with congestion                                       |
 | `999` / `112`        | Reject unless emergency support is intentionally implemented |
 
-The HT812 registers successfully as `child-phone`. Asterisk reports the endpoint as reachable. Recording works. Home Assistant sees completed WAV files and can deliver them to Telegram.
-
-That is enough for a first version. External calling can come later, after the local path is boring.
+The HT812 registers successfully as `child-phone`. Asterisk reports the endpoint as reachable. Recording works. Home Assistant sees completed WAV files and can deliver them to Telegram. That is enough for a first version. External calling can come later, after the local path is boring.
 
 ## The emergency-call problem
 
@@ -303,7 +295,7 @@ There is one uncomfortable detail. This thing looks like a landline. That means 
 - tested routing
 - fallback if internet or power is down
 
-For the first version, I am not pretending it is an emergency phone. It is a family communication device and should be labelled accordingly. Half-supporting emergency calls is worse than not supporting them. It creates confidence where there should be caution.
+I am not pretending it is an emergency phone. It is a family communication device and should be labelled accordingly. Half-supporting emergency calls is worse than not supporting them. It creates confidence where there should be caution.
 
 ## Privacy is part of the build
 
