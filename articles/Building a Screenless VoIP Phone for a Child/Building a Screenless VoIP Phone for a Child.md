@@ -13,9 +13,9 @@ date: '2026-07-23T10:13:33Z'
 ---
 This started, as too many projects do, with me watching Instagram Reels. I came across [this Reel](https://www.instagram.com/reel/DZuj9SehAhE) about someone who had bought a [Tin Can](https://tincan.kids/products/tin-can) phone for her daughter, and the shape of it immediately appealed to me. A familiar physical interface, a modern backend, no apps, no games, and very little nonsense exposed to the child.
 
-The bit that got me was the quick-dial trick. If a child-friendly phone can call specific numbers, those numbers do not have to be normal phone numbers. They can be internal service codes. If those codes reach a PBX, pressing a physical button can do something other than place a call.
+The bit that got me was the quick-dial trick. If a child-friendly phone can call specific numbers, those numbers do not have to be normal phone numbers. They can be internal service codes. If those codes reach a PBX, pressing a physical button can do something other than place a call. Like running code or triggering an automation (with the correct haness).
 
-That made the project useful in two directions. I could learn telephony, and my son could get a screenless interface to the house. My first instinct was to build the whole system myself, but then I found [Asterisk](https://www.asterisk.org/) through the [TECH7Fox Asterisk Home Assistant add-on](https://github.com/TECH7Fox/asterisk-hass-addons) and companion [Asterisk Home Assistant integration](https://github.com/TECH7Fox/asterisk-hass-integration). That changed the plan from writing a small phone system to configuring a real PBX.
+My first instinct was to build the whole system myself. I was going to run the service within my Home Assistant host [as i have done before](https://github.com/andremmfaria/ha-wiimote-bridge). But then I found [Asterisk](https://www.asterisk.org/) through the [TECH7Fox Asterisk Home Assistant add-on](https://github.com/TECH7Fox/asterisk-hass-addons) and companion [Asterisk Home Assistant integration](https://github.com/TECH7Fox/asterisk-hass-integration). That made the project useful in some ways. I could learn telephony (i am an old man after all...), automate stuff around the house, my son could get a screenless interface to access these automations and, to boot, communicate with his parents. That changed the plan from writing a small phone system to configuring a real PBX.
 
 So the design became almost disappointingly old-fashioned.
 
@@ -76,7 +76,17 @@ That is the architectural trick. Do not make the phone clever. Make the backend 
 
 There is also something pleasingly ridiculous about the whole thing. Most of the useful ideas here are old. Not "[last framework cycle](https://www.herodevs.com/blog-posts/sunsetting-a-framework-lessons-from-angularjs)" old, proper old. PBXs, extension routing, tone signalling, recorded prompts, call contexts. This is roughly seventy-year-old territory in computing terms, which makes it the Triassic. I am not inventing a new interaction model so much as bolting Home Assistant onto very settled telephony ideas and letting them do what they were always good at.
 
-## Asterisk does the routing
+## Configuring the ATA
+
+The HT812 is configured through its own web UI. It works, but it is enormous. Grandstream exposes a frightening amount of telephony machinery in there, including SIP profiles, codec order, DTMF behaviour, dial plans, NAT settings, provisioning, certificates, call features, and a swamp of P-values. Useful, but not exactly a child-friendly interface for the adult either.
+
+For this build, only a small slice mattered. Profile 1 points at the Home Assistant Asterisk add-on as the SIP server. FXS port 1 uses `child-phone` as both the SIP user ID and authenticate ID. The password matches the Asterisk `pjsip_custom.conf` secret. DTMF uses RFC4733, and the dial plan is `{ xS0 }`, which sends a single digit immediately to Asterisk.
+
+The full ATA walkthrough lives in the companion repo at [config/HT812V2/README.md](https://github.com/andremmfaria/child-phone/blob/main/config/HT812V2/README.md). That guide is where the web UI details belong, because copying the whole thing into the article would be cruel and not especially useful.
+
+## Configuring Asterisk
+
+### Asterisk does the routing
 
 The ATA registers to Asterisk as a SIP endpoint called `child-phone`. Asterisk runs inside Home Assistant using the TECH7Fox Asterisk add-on.
 
@@ -130,9 +140,9 @@ callerid="Child Phone" <201>
 dtmf_mode=rfc4733
 ```
 
-The important bit is that the AOR block and the endpoint block are both named `child-phone`. PJSIP distinguishes them by `type`, and the endpoint points back to that AOR with `aors=child-phone`. The full config, including the identify block and the rest of the project files, is in the repository linked at the bottom of the article.
+The important bit is that the AOR block and the endpoint block are both named `child-phone`. PJSIP distinguishes them by `type`, and the endpoint points back to that AOR with `aors=child-phone`. The full config, including the identify block and the rest of the project files, is in the [Asterisk guide in the companion repo](https://github.com/andremmfaria/child-phone/blob/main/config/asterisk/README.md).
 
-## Default deny, because children press buttons
+### Default deny, because children press buttons
 
 The safety model matters more than the telephony. The child phone must not inherit a normal outbound dial plan. In Asterisk, the endpoint is assigned to a dedicated context called `child-phone`, and that context only contains explicit actions. The real dialplan has this shape.
 
