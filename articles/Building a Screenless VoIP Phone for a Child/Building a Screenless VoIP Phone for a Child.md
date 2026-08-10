@@ -12,19 +12,17 @@ date: '2026-07-23T10:13:33Z'
 ---
 This started, as too many projects do, with me watching Instagram Reels.
 
-I came across [this Reel](https://www.instagram.com/reel/DZuj9SehAhE) about someone who had bought a [Tin Can](https://tincan.kids/products/tin-can) phone for her daughter: a modern, Wi-Fi-connected landline for kids with approved contacts, no apps, and no games. It had the shape of something I immediately liked: a familiar physical interface, a modern backend, and very little nonsense exposed to the child.
+I came across [this Reel](https://www.instagram.com/reel/DZuj9SehAhE) about someone who had bought a [Tin Can](https://tincan.kids/products/tin-can) phone for her daughter. It is a modern, Wi-Fi-connected landline for kids with approved contacts, no apps, and no games. It had the shape of something I immediately liked, a familiar physical interface, a modern backend, and very little nonsense exposed to the child.
 
 Later, she found that the quick-dial buttons could be wired to call specific numbers that ran code. That was the bit that got me. If a child-friendly phone can call specific numbers, those numbers do not have to be normal phone numbers. They can be internal service codes. And if an internal service code reaches a PBX, that PBX can do something other than place a call.
 
-That would be an excellent excuse to learn telephony AND give my son a screenless interface to the house: big physical buttons, no tablet, no app, no notifications. Press one button to leave me a message. Press another to leave his mum a message. Later, maybe press a button to play a song, send a "come here" notification, or trigger an automation.
+That would be an excellent excuse to learn telephony and give my son a screenless interface to the house. Big physical buttons, no tablet, no app, no notifications. Press one button to leave me a message. Press another to leave his mum a message. Later, maybe press a button to play a song, send a "come here" notification, or trigger an automation.
 
 My first instinct was to build the system myself. Some small service, a bit of audio handling, a bit of Home Assistant glue, probably a few evenings of reinventing things that people with switchboards solved before my parents were born. Educational, yes. Sensible, questionable.
 
-Then I found [Asterisk](https://www.asterisk.org/), more specifically, I found the [TECH7Fox Asterisk Home Assistant add-on](https://github.com/TECH7Fox/asterisk-hass-addons), which runs Asterisk inside Home Assistant, and the companion [Asterisk Home Assistant integration](https://github.com/TECH7Fox/asterisk-hass-integration), which connects Home Assistant to Asterisk over AMI. That changed the project from "write a small phone system" to "configure a real PBX". Asterisk could be the call brain in little to no time, and because it was available as a Home Assistant add-on, it already lived where I wanted the automations to live. The "code" would mostly be configuration: SIP endpoints, dialplan rules, recordings, and Home Assistant automations.
+Then I found [Asterisk](https://www.asterisk.org/), more specifically, I found the [TECH7Fox Asterisk Home Assistant add-on](https://github.com/TECH7Fox/asterisk-hass-addons), which runs Asterisk inside Home Assistant, and the companion [Asterisk Home Assistant integration](https://github.com/TECH7Fox/asterisk-hass-integration), which connects Home Assistant to Asterisk over AMI. That changed the project from "write a small phone system" to "configure a real PBX". Asterisk could be the call brain in little to no time, and because it was available as a Home Assistant add-on, it already lived where I wanted the automations to live. The "code" would mostly be configuration, SIP endpoints, dialplan rules, recordings, and Home Assistant automations.
 
-There was one catch. With the current add-on/integration setup, quick-dialling a Home Assistant action directly is not quite a first-class path yet. Asterisk can emit AMI `UserEvent`s from the dialplan, but the Home Assistant integration did not forward those events into Home Assistant as normal events. I opened [TECH7Fox/asterisk-hass-integration PR #126](https://github.com/TECH7Fox/asterisk-hass-integration/pull/126) to add that. I also opened [TECH7Fox/asterisk-hass-addons PR #453](https://github.com/TECH7Fox/asterisk-hass-addons/pull/453) to make AMI network access configurable, so Home Assistant can connect without loosening access more than necessary.
-
-So the design became almost disappointingly old-fashioned:
+So the design became almost disappointingly old-fashioned.
 
 ```text
 big-button analogue phone
@@ -40,20 +38,20 @@ The phone itself stays dumb. That is the point.
 
 An RJ11 analogue phone does not understand VoIP, Home Assistant, Telegram, automations, or routing. It expects a telephone line to provide dial tone, line voltage, ringing, and an audio path.
 
-That is useful. A simple phone is robust, familiar, and child-friendly. The physical interface is the feature. The intelligence lives behind it, in two layers:
+That is useful. A simple phone is robust, familiar, and child-friendly. The physical interface is the feature. The intelligence lives behind it, in two layers.
 
 - an **ATA**, which pretends to be a landline
 - a **PBX**, which decides what each dialled digit means
 
-ATA means analogue telephone adapter. For this build, the important detail is that it needs an **FXS** port. FXS is the port that powers an analogue phone. FXO is the opposite: it connects to a real landline. Easy mistake, annoying return.
+ATA means analogue telephone adapter. For this build, the important detail is that it needs an **FXS** port. FXS is the port that powers an analogue phone. FXO is the opposite: it connects to a real landline. The one I got is the [Grandstream HT812 V2](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht812v2), which I bought [from Amazon Ireland](https://www.amazon.ie/dp/B0BL1CXL27).
 
-The phone I bought was a [big-button analogue handset from Amazon Ireland](https://www.amazon.ie/dp/B0DV1TKG96). The ATA I used is the [Grandstream HT812 V2](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht812v2), which I also bought [from Amazon Ireland](https://www.amazon.ie/dp/B0BL1CXL27). It has two FXS ports, which is more than I need for one phone but useful for testing or a second handset later. The [HT818](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht818) also exists, but that has eight FXS ports. Lovely if you are building a small hotel phone system. Mildly ridiculous for one child phone.
+The phone I bought was a big-button analogue handset also from [Amazon Ireland](https://www.amazon.ie/dp/B0DV1TKG96). As far as I understand, this can be done with any analogue phone that has an RJ11 connector. The HT812 has two FXS ports, which is more than I need for one phone but useful for testing or a second handset later. The [HT818](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht818) also exists, but that has eight FXS ports. Lovely if you are building a small hotel phone system. Mildly ridiculous for one child phone.
 
 ## The working version
 
 The first version is not a full family PBX yet. I deliberately built the local, default-deny core before adding a SIP trunk for external calls.
 
-Right now the phone is a one-digit interface:
+Right now the phone is a one-digit interface.
 
 ```text
 1 = record a message for Dad
@@ -69,7 +67,7 @@ Right now the phone is a one-digit interface:
 
 The child does not need to know those numbers. The physical buttons get labels or photos. The backend maps each digit to a fixed action.
 
-So pressing a button is not really "dialling a number". It is triggering a controlled workflow:
+So pressing a button is not really "dialling a number". It is triggering a controlled workflow.
 
 ```text
 button press -> ATA -> Asterisk dialplan -> local action
@@ -77,13 +75,13 @@ button press -> ATA -> Asterisk dialplan -> local action
 
 That is the architectural trick. Do not make the phone clever. Make the backend clever.
 
-There is also something pleasingly ridiculous about the whole thing: most of the useful ideas here are old. Not "last framework cycle" old. Proper old. PBXs, extension routing, tone signalling, recorded prompts, call contexts: this is roughly seventy-year-old territory in computing terms, which makes it the Triassic. I am not inventing a new interaction model so much as bolting Home Assistant onto very settled telephony ideas and letting them do what they were always good at.
+There is also something pleasingly ridiculous about the whole thing. Most of the useful ideas here are old. Not "[last framework cycle](https://www.herodevs.com/blog-posts/sunsetting-a-framework-lessons-from-angularjs)" old, proper old. PBXs, extension routing, tone signalling, recorded prompts, call contexts. This is roughly seventy-year-old territory in computing terms, which makes it the Triassic. I am not inventing a new interaction model so much as bolting Home Assistant onto very settled telephony ideas and letting them do what they were always good at.
 
 ## Asterisk does the routing
 
 The ATA registers to Asterisk as a SIP endpoint called `child-phone`. Asterisk runs inside Home Assistant using the TECH7Fox Asterisk add-on.
 
-The add-on creates two useful config directories:
+The add-on creates two useful config directories.
 
 ```text
 /addon_configs/<asterisk_addon_slug>/asterisk/default
@@ -92,7 +90,7 @@ The add-on creates two useful config directories:
 
 The `default` directory is regenerated by the add-on. Treat it as reference material. Durable edits go in `custom`.
 
-For this project, the important custom files are:
+For this project, these are the important custom files.
 
 ```text
 pjsip_custom.conf
@@ -102,15 +100,42 @@ indications.conf
 modules.conf
 ```
 
-One small Asterisk/PJSIP detail cost me time: the working setup uses `child-phone` as both the SIP username and the AOR name. Renaming the AOR to something tidy like `child-phone-aor` broke registration with an `AOR '' not found for endpoint 'child-phone'` error. Sometimes the ugly name is the correct name. Telephony has opinions.
+One small Asterisk/PJSIP detail cost me time. The working setup uses `child-phone` as both the SIP username and the AOR name. Renaming the AOR to something tidy like `child-phone-aor` broke registration with an `AOR '' not found for endpoint 'child-phone'` error. Sometimes the ugly name is the correct name. Telephony has opinions and we know none of them.
+
+This is the trimmed shape of the PJSIP config.
+
+```ini
+[child-phone-auth]
+type=auth
+auth_type=userpass
+username=child-phone
+password=CHANGEME_CHILD_PHONE_SECRET
+
+[child-phone]
+type=aor
+max_contacts=1
+remove_existing=yes
+remove_unavailable=yes
+qualify_frequency=30
+
+[child-phone]
+type=endpoint
+transport=transport-udp
+context=child-phone
+disallow=all
+allow=alaw
+allow=ulaw
+aors=child-phone
+auth=child-phone-auth
+callerid="Child Phone" <201>
+dtmf_mode=rfc4733
+```
+
+The important bit is that the AOR block and the endpoint block are both named `child-phone`. PJSIP distinguishes them by `type`, and the endpoint points back to that AOR with `aors=child-phone`. The full config, including the identify block and the rest of the project files, is in the repository linked at the bottom of the article.
 
 ## Default deny, because children press buttons
 
-The safety model matters more than the telephony.
-
-The child phone must not inherit a normal outbound dial plan. In Asterisk, the endpoint is assigned to a dedicated context called `child-phone`, and that context only contains explicit actions.
-
-The real dialplan looks like this in shape:
+The safety model matters more than the telephony. The child phone must not inherit a normal outbound dial plan. In Asterisk, the endpoint is assigned to a dedicated context called `child-phone`, and that context only contains explicit actions. The real dialplan has this shape.
 
 ```asterisk
 [child-phone]
@@ -142,9 +167,9 @@ exten => s,1,UserEvent(ChildPhoneButton,Source: child-phone,Button: ${ARG1})
  same => n,Return()
 ```
 
-That last `_X!` rule is important. It rejects everything that has not been explicitly defined. There is no fallback like "if it looks like a number, send it to the trunk". That is how you accidentally build a normal phone.
+That last `_X!` rule is important. It rejects everything that has not been explicitly defined. There is no fallback like "if it looks like a number, send it to the trunk".
 
-The ATA also has a digit map, but in the current prototype it is intentionally simple:
+The ATA also has a digit map, but in the current prototype it is intentionally simple.
 
 ```text
 { xS0 }
@@ -156,13 +181,13 @@ That tells the HT812 to send any single digit immediately. The Asterisk context 
 
 The message feature does not need a separate product.
 
-Asterisk records the audio directly under:
+Asterisk writes recordings here.
 
 ```text
 /media/asterisk/messages
 ```
 
-Prompt audio lives under:
+Prompt audio lives here.
 
 ```text
 /media/asterisk/sounds/custom
@@ -170,7 +195,7 @@ Prompt audio lives under:
 
 When my son presses `1`, Asterisk answers, emits a `ChildPhoneButton` AMI event, plays a custom prompt, plays a beep, and records until hang-up. Button `2` does the same for his mum.
 
-The flow is:
+The flow looks like this.
 
 ```text
 child presses button 1
@@ -187,14 +212,14 @@ The nice thing about this design is that Asterisk does not need to know about Te
 
 The recording delivery path uses Home Assistant's Folder Watcher integration.
 
-The watcher is configured for:
+The watcher uses this configuration.
 
 ```text
 Folder: /media/asterisk/messages
 Pattern: *.wav
 ```
 
-The automation listens for the `closed` event, not the `created` event:
+The automation listens for the `closed` event, not the `created` event.
 
 ```yaml
 triggers:
@@ -212,7 +237,7 @@ conditions:
 
 That detail matters. Asterisk creates the WAV file before the recording is finished. If Home Assistant sends the file on `created`, it can race the recorder and upload a partial recording. The `closed` event fires after Asterisk has finished writing.
 
-The action is just `telegram_bot.send_document`:
+The action is just `telegram_bot.send_document`.
 
 ```yaml
 action: telegram_bot.send_document
@@ -225,36 +250,32 @@ The bot token stays in Home Assistant. The repository contains config templates 
 
 ## Home Assistant and Asterisk
 
-There is a useful Home Assistant ecosystem around this already.
+There is a useful Home Assistant ecosystem around this already. The project I used is the TECH7Fox Asterisk add-on. It runs Asterisk inside Home Assistant and exposes the real Asterisk configuration files under the add-on config directory. There is also a HACS Asterisk integration that connects to Asterisk over AMI, the Asterisk Manager Interface. That can expose device state, registration state, connected line, DTMF events, and a generic `send_action` service for AMI commands like `Ping`, `Originate`, or `Hangup`.
 
-The project I used is the TECH7Fox Asterisk add-on. It runs Asterisk inside Home Assistant and exposes the real Asterisk configuration files under the add-on config directory.
+There was one catch. With the current add-on/integration setup, quick-dialling a Home Assistant action directly is not quite a first-class path yet. Asterisk can emit AMI `UserEvent`s from the dialplan, but the Home Assistant integration did not forward those events into Home Assistant as normal events. I opened [TECH7Fox/asterisk-hass-integration PR #126](https://github.com/TECH7Fox/asterisk-hass-integration/pull/126) to add that. I also opened [TECH7Fox/asterisk-hass-addons PR #453](https://github.com/TECH7Fox/asterisk-hass-addons/pull/453) to make AMI network access configurable, so Home Assistant can connect without loosening access more than necessary.
 
-There is also a HACS Asterisk integration that connects to Asterisk over AMI, the Asterisk Manager Interface. That can expose device state, registration state, connected line, DTMF events, and a generic `send_action` service for AMI commands like `Ping`, `Originate`, or `Hangup`.
+For this build, I split responsibilities this way.
 
-For this build, I use them differently:
+- **Asterisk add-on** - the actual PBX and dialplan engine
+- **Asterisk integration** - monitoring and Home Assistant event/control bridge
 
-- **Asterisk add-on**: the actual PBX and dialplan engine
-- **Asterisk integration**: monitoring and Home Assistant event/control bridge
-
-I do not make the Home Assistant integration the core path for child button behaviour. That belongs in the Asterisk dialplan. It is lower-level, more deterministic, and less likely to break because a Home Assistant custom integration changed an entity model.
-
-Home Assistant should observe and react. Asterisk should decide what a dialled digit means.
+I do not make the Home Assistant integration the core path for child button behaviour. That belongs in the Asterisk dialplan. It is lower-level, more deterministic, and less likely to break because a Home Assistant custom integration changed an entity model. Home Assistant should observe and react. Asterisk should decide what a dialled digit means.
 
 ## What I tested
 
 The first useful milestone was not "full telephone system". It was making sure the local safety model worked.
 
-| Dialled input            | Expected result                                              |
-| ------------------------ | ------------------------------------------------------------ |
-| `1`                    | Play Dad prompt, beep, record WAV                            |
-| `2`                    | Play Mum prompt, beep, record WAV                            |
-| `3`                    | Play "Wheels on the Bus" clip                                |
-| `4`                    | Emit`ChildPhoneButton` event and hang up                   |
-| `5`                    | Emit`ChildPhoneButton` event and hang up                   |
-| `6`, `7`, `8`      | Emit event, play three beeps, hang up                        |
-| `9`                    | Play test prompt                                             |
-| random multi-digit input | Reject with congestion                                       |
-| `999` / `112`        | Reject unless emergency support is intentionally implemented |
+| Dialled input | Expected result |
+|---|---|
+| `1` | Play Dad prompt, beep, record WAV |
+| `2` | Play Mum prompt, beep, record WAV |
+| `3` | Play "Wheels on the Bus" clip |
+| `4` | Emit `ChildPhoneButton` event and hang up |
+| `5` | Emit `ChildPhoneButton` event and hang up |
+| `6`, `7`, `8` | Emit event, play three beeps, hang up |
+| `9` | Play test prompt |
+| random multi-digit input | Reject with congestion |
+| `999` / `112` | Reject unless emergency support is intentionally implemented |
 
 The HT812 registers successfully as `child-phone`. Asterisk reports the endpoint as reachable. Recording works. Home Assistant sees completed WAV files and can deliver them to Telegram.
 
@@ -262,9 +283,7 @@ That is enough for a first version. External calling can come later, after the l
 
 ## The emergency-call problem
 
-There is one uncomfortable detail: this thing looks like a landline.
-
-That means everyone in the house may assume it can call emergency services. If it cannot call `999` or `112`, that needs to be explicit. If it can, then emergency support becomes a proper requirement:
+There is one uncomfortable detail. This thing looks like a landline. That means everyone in the house may assume it can call emergency services. If it cannot call `999` or `112`, that needs to be explicit. If it can, then emergency support becomes a proper requirement.
 
 - SIP provider support for Irish emergency calls
 - correct caller ID
@@ -273,27 +292,25 @@ That means everyone in the house may assume it can call emergency services. If i
 - tested routing
 - fallback if internet or power is down
 
-For the first version, I am not pretending it is an emergency phone. It is a family communication device and should be labelled accordingly.
-
-Half-supporting emergency calls is worse than not supporting them. It creates confidence where there should be caution.
+For the first version, I am not pretending it is an emergency phone. It is a family communication device and should be labelled accordingly. Half-supporting emergency calls is worse than not supporting them. It creates confidence where there should be caution.
 
 ## Privacy is part of the build
 
 Recorded child voice messages are private data. The plumbing is simple enough that it is easy to forget that.
 
-For this setup, the rules are:
+For this setup, I use these rules.
 
 - recordings go only to a private parent-controlled Telegram destination
 - bot tokens and chat IDs stay in Home Assistant secrets/config, not in the public repo
 - live SIP, AMI, Home Assistant, and Telegram credentials are never committed
 - recordings should have a retention policy rather than piling up forever
-- failure should be visible: a missed upload should not silently disappear
+- failure should be visible because a missed upload should not silently disappear
 
-The first working version proves the path. The next hardening step is operational rather than architectural: retention, monitoring, and backup/restore of the ATA and Asterisk config.
+The first working version proves the path. The next hardening step is operational rather than architectural, retention, monitoring, and backup/restore of the ATA and Asterisk config.
 
 ## The build, in one page
 
-The current version looks like this:
+The current version looks like this.
 
 ```text
 big-button RJ11 phone
@@ -305,9 +322,11 @@ big-button RJ11 phone
   -> Telegram delivery for completed WAV files
 ```
 
-The source config is here:
+The source config lives here.
 
 - [github.com/andremmfaria/child-phone](https://github.com/andremmfaria/child-phone)
+
+This can still become an actual phone later. The missing commercial piece is a SIP trunk from a provider such as [VoIPLine Ireland](https://www.voipline.ie/sip-trunking), which lists SIP lines from around EUR 1 per channel per month, with numbers purchased separately. That would let Asterisk place and receive calls through the ordinary phone network.
 
 It keeps the child-facing device physical and boring, which is exactly what I want. All the complexity stays in software, where it can be inspected, backed up, changed, and locked down.
 
