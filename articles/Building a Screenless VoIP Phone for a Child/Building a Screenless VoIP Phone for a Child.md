@@ -11,7 +11,6 @@ tags:
 id: 4213939
 date: '2026-07-23T10:13:33Z'
 ---
-
 This started, as too many projects do, with me watching Instagram Reels.
 
 I came across [this Reel](https://www.instagram.com/reel/DZuj9SehAhE) about someone who had bought a [Tin Can](https://tincan.kids/products/tin-can) phone for her daughter. It is a modern, Wi-Fi-connected landline for kids with approved contacts, no apps, and no games. It had the shape of something I immediately liked, a familiar physical interface, a modern backend, and very little nonsense exposed to the child.
@@ -253,6 +252,12 @@ data:
 ```
 
 The bot token stays in Home Assistant. The repository contains config templates and examples, not live secrets.
+
+## Telegram delivery
+
+The Telegram side is intentionally small. I created a bot through BotFather, following Telegram's official [bot creation tutorial](https://core.telegram.org/bots/tutorial#obtain-your-bot-token), then created a private broadcast channel for the phone messages and added the bot there. Home Assistant only needs the bot token and the destination chat. The first test was a plain text message from Home Assistant. The real test was a completed WAV recording landing in the same channel.
+
+![Telegram broadcast channel receiving a Home Assistant test message and a child phone WAV recording](telegram-child-phone-recording.png)
 
 ## Home Assistant and Asterisk
 
