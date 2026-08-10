@@ -2,6 +2,7 @@
 title: Building a Screenless VoIP Phone for a Child
 description: 'How I turned a big-button analogue phone into a child-friendly Home Assistant interface using a Grandstream ATA, Asterisk, and Telegram voice-message delivery.'
 published: false
+cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Building%20a%20Screenless%20VoIP%20Phone%20for%20a%20Child/pink-handset-grandstream-ata.jpg'
 tags:
   - homeassistant
   - voip
@@ -10,6 +11,7 @@ tags:
 id: 4213939
 date: '2026-07-23T10:13:33Z'
 ---
+
 This started, as too many projects do, with me watching Instagram Reels.
 
 I came across [this Reel](https://www.instagram.com/reel/DZuj9SehAhE) about someone who had bought a [Tin Can](https://tincan.kids/products/tin-can) phone for her daughter. It is a modern, Wi-Fi-connected landline for kids with approved contacts, no apps, and no games. It had the shape of something I immediately liked, a familiar physical interface, a modern backend, and very little nonsense exposed to the child.
@@ -34,6 +36,8 @@ big-button analogue phone
 
 The phone itself stays dumb. That is the point.
 
+![Pink analogue handset connected to a Grandstream HT812 V2 ATA](pink-handset-grandstream-ata.jpg)
+
 ## The phone is not the brain
 
 An RJ11 analogue phone does not understand VoIP, Home Assistant, Telegram, automations, or routing. It expects a telephone line to provide dial tone, line voltage, ringing, and an audio path.
@@ -52,6 +56,8 @@ The phone I bought was a big-button analogue handset also from [Amazon Ireland](
 The first version is not a full family PBX yet. I deliberately built the local, default-deny core before adding a SIP trunk for external calls.
 
 Right now the phone is a one-digit interface.
+
+![Backlit keypad on the pink analogue handset](pink-handset-backlit-keypad.jpg)
 
 ```text
 1 = record a message for Dad
@@ -265,17 +271,17 @@ I do not make the Home Assistant integration the core path for child button beha
 
 The first useful milestone was not "full telephone system". It was making sure the local safety model worked.
 
-| Dialled input | Expected result |
-|---|---|
-| `1` | Play Dad prompt, beep, record WAV |
-| `2` | Play Mum prompt, beep, record WAV |
-| `3` | Play "Wheels on the Bus" clip |
-| `4` | Emit `ChildPhoneButton` event and hang up |
-| `5` | Emit `ChildPhoneButton` event and hang up |
-| `6`, `7`, `8` | Emit event, play three beeps, hang up |
-| `9` | Play test prompt |
-| random multi-digit input | Reject with congestion |
-| `999` / `112` | Reject unless emergency support is intentionally implemented |
+| Dialled input            | Expected result                                              |
+| ------------------------ | ------------------------------------------------------------ |
+| `1`                    | Play Dad prompt, beep, record WAV                            |
+| `2`                    | Play Mum prompt, beep, record WAV                            |
+| `3`                    | Play "Wheels on the Bus" clip                                |
+| `4`                    | Emit`ChildPhoneButton` event and hang up                   |
+| `5`                    | Emit`ChildPhoneButton` event and hang up                   |
+| `6`, `7`, `8`      | Emit event, play three beeps, hang up                        |
+| `9`                    | Play test prompt                                             |
+| random multi-digit input | Reject with congestion                                       |
+| `999` / `112`        | Reject unless emergency support is intentionally implemented |
 
 The HT812 registers successfully as `child-phone`. Asterisk reports the endpoint as reachable. Recording works. Home Assistant sees completed WAV files and can deliver them to Telegram.
 
@@ -296,9 +302,7 @@ For the first version, I am not pretending it is an emergency phone. It is a fam
 
 ## Privacy is part of the build
 
-Recorded child voice messages are private data. The plumbing is simple enough that it is easy to forget that.
-
-For this setup, I use these rules.
+Recorded child voice messages are private data. The plumbing is simple enough that it is easy to forget that. For this setup, I use these rules.
 
 - recordings go only to a private parent-controlled Telegram destination
 - bot tokens and chat IDs stay in Home Assistant secrets/config, not in the public repo
@@ -328,6 +332,4 @@ The source config lives here.
 
 This can still become an actual phone later. The missing commercial piece is a SIP trunk from a provider such as [VoIPLine Ireland](https://www.voipline.ie/sip-trunking), which lists SIP lines from around EUR 1 per channel per month, with numbers purchased separately. That would let Asterisk place and receive calls through the ordinary phone network.
 
-It keeps the child-facing device physical and boring, which is exactly what I want. All the complexity stays in software, where it can be inspected, backed up, changed, and locked down.
-
-Sometimes the right smart device is a dumb device with a better backend.
+It keeps the child-facing device physical and boring, which is exactly what I want. All the complexity stays in software, where it can be inspected, backed up, changed, and locked down. Sometimes the right smart device is a dumb device with a better backend.
