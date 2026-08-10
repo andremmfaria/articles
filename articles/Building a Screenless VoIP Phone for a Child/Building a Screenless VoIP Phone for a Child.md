@@ -1,7 +1,7 @@
 ---
 title: Building a Screenless VoIP Phone for a Child
 description: 'How I turned a big-button analogue phone into a child-friendly Home Assistant interface using a Grandstream ATA, Asterisk, and Telegram voice-message delivery.'
-published: false
+published: true
 cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Building%20a%20Screenless%20VoIP%20Phone%20for%20a%20Child/pink-handset-grandstream-ata.jpg'
 tags:
   - homeassistant
