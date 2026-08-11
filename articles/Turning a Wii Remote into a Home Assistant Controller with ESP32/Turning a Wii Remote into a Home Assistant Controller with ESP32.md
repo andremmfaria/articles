@@ -16,6 +16,8 @@ In a [previous article](https://dev.to/andremmfaria/improving-the-esp32-wiimote-
 
 At the time, the real reason for doing it was only hinted at. I wanted to use a Wii Remote as a physical controller for Home Assistant. Not as a novelty dashboard nor another app, a real object with real buttons that can sit on a table and trigger automations without unlocking a phone, opening a web UI, or explaining to a voice assistant that no, I did not ask for the living room lamp to become a podcast.
 
+That also makes it a useful child-facing interface: no screen, no app drawer, no voice prompt, just a familiar object with buttons that map to things in the house. I like that because pediatric guidance on [media and young minds](https://pubmed.ncbi.nlm.nih.gov/27940793/) treats screen use as something to design deliberately, not as the default surface for every interaction.
+
 The shape is simple.
 
 ```text
@@ -32,6 +34,8 @@ A Wii Remote is an odd thing to put in a home automation system, but only if you
 
 Most smart home controls are either too abstract or too fragile. Phones are powerful, but they are not good shared controls. Voice assistants are convenient until they mishear you, lose context, or need the cloud to be in a good mood. Wall switches are reliable, but fixed. A Wii Remote sits in a useful middle ground because it is physical, cheap, wireless, programmable, and already designed to be held without looking at it. The buttons are distinct enough that you can build muscle memory around them. For some automations, that matters more than having a beautiful UI.
 
+For children, that physicality matters even more. A Wii Remote is easy to hold, forgiving, and legible in a way a touchscreen often is not. That intuition has some backing in HCI work on [tangible interaction for children's creative learning](https://www.mmi.ifi.lmu.de/pubdb/publications/pub/liyanhong2021cc/liyanhong2021cc.pdf): physical objects can make digital behavior feel more immediate and exploratory.
+
 For example, a practical mapping could look like this:
 
 * `A` toggles a light
@@ -40,6 +44,8 @@ For example, a practical mapping could look like this:
 * `MINUS` decreases media volume
 * `HOME` activates a scene
 * the D-pad controls media playback or dashboard navigation
+
+The mappings can be child-sized too: one button for lights, one for music, one for a bedtime scene. The point is not to expose the whole smart home, but to give a child a few safe, predictable actions, closer to a [tangible interface](https://dl.acm.org/doi/10.1145/1226969.1227004) than another miniature dashboard.
 
 This is not meant to replace every Home Assistant interface. It is meant to be one small, reliable interaction surface. Sometimes the best UI is a button that does exactly one thing.
 
@@ -202,7 +208,7 @@ At this point the Wiimote has become a predictable Home Assistant input. Subscri
 
 ## 5. MQTT as the Contract
 
-MQTT is not glamorous, which is one of its better qualities. For this project, it gives the bridge a stable interface that is usable by Home Assistant but not trapped inside Home Assistant. Anything that can consume MQTT can consume the Wii Remote events.
+[MQTT](https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html) is not glamorous, which is one of its better qualities. For this project, it gives the bridge a stable interface that is usable by Home Assistant but not trapped inside Home Assistant. Anything that can consume MQTT can consume the Wii Remote events.
 
 The bridge publishes several topic families.
 
