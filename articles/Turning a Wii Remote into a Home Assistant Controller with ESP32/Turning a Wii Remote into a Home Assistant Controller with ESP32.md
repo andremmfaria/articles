@@ -4,13 +4,12 @@ description: 'A follow-up to the ESP32 Wiimote library work: using a real ESP32,
 published: false
 cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Turning%20a%20Wii%20Remote%20into%20a%20Home%20Assistant%20Controller%20with%20ESP32/cover-wiimote-home-assistant-controller.png'
 tags:
-
-- homeassistant
-- esp32
-- mqtt
-- iot
-  date: '2026-08-10T00:00:00Z'
-  id: 4363452
+  - homeassistant
+  - esp32
+  - mqtt
+  - iot
+date: '2026-08-10T00:00:00Z'
+id: 4363452
 ---
 In a [previous article](https://dev.to/andremmfaria/improving-the-esp32-wiimote-library-from-prototype-to-production-ready-arduino-library-448e), I wrote about improving the ESP32 Wiimote library. That work was useful on its own. The original library already made it possible to connect a Nintendo Wii Remote to an ESP32 over Bluetooth Classic, but I wanted it to behave more like something you could build a real project on top of, with clearer structure, better examples, runtime logging, connection state, battery reporting, and Arduino Library Manager support.
 
