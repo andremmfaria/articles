@@ -15,7 +15,7 @@ This started, as too many projects do, with me watching Instagram Reels. I came 
 
 The bit that got me was the quick-dial trick. If a child-friendly phone can call specific numbers, those numbers do not have to be normal phone numbers. They can be internal service codes. If those codes reach a PBX, pressing a physical button can do something other than place a call. Like running code or triggering an automation, with the correct harness.
 
-My first instinct was to build the whole system myself. I was going to run the service within my Home Assistant host [as I have done before](https://github.com/andremmfaria/ha-wiimote-bridge). But then I found [Asterisk](https://www.asterisk.org/) through the [TECH7Fox Asterisk Home Assistant add-on](https://github.com/TECH7Fox/asterisk-hass-addons) and companion [Asterisk Home Assistant integration](https://github.com/TECH7Fox/asterisk-hass-integration). That made the project useful in some ways. I could learn telephony, automate stuff around the house, give my son a screenless interface to those automations, and, to boot, let him communicate with his parents. That changed the plan from writing a small phone system to configuring a real PBX.
+My first instinct was to build the whole system myself and run it inside Home Assistant [as I have done before](https://github.com/andremmfaria/ha-wiimote-bridge). Then I found [Asterisk](https://www.asterisk.org/) through the [TECH7Fox Asterisk Home Assistant add-on](https://github.com/TECH7Fox/asterisk-hass-addons) and companion [Asterisk Home Assistant integration](https://github.com/TECH7Fox/asterisk-hass-integration). That changed the plan from writing a small phone system to configuring a real PBX.
 
 So the design became almost disappointingly old-fashioned.
 
@@ -33,16 +33,14 @@ The phone itself stays dumb. That is the point.
 
 ## The phone is not the brain
 
-An RJ11 analogue phone does not understand VoIP, Home Assistant, Telegram, automations, or routing. It expects a telephone line to provide dial tone, line voltage, ringing, and an audio path.
-
-That is useful. A simple phone is robust, familiar, and child-friendly. The [physical interface is the feature](https://dl.acm.org/doi/10.1145/258549.258715). The intelligence lives behind it, in two layers.
+An RJ11 analogue phone does not understand VoIP, Home Assistant, Telegram, automations, or routing. It expects a telephone line to provide dial tone, line voltage, ringing, and an audio path. That is useful. A simple phone is robust, familiar, and child-friendly. The [physical interface is the feature](https://dl.acm.org/doi/10.1145/258549.258715). The intelligence lives behind it in two layers.
 
 - an **ATA**, which pretends to be a landline
 - a **PBX**, which decides what each dialled digit means
 
-ATA means analogue telephone adapter. For this build, the important detail is that it needs an **FXS** port. FXS is the port that powers an analogue phone. FXO is the opposite: it connects to a real landline. The one I got is the [Grandstream HT812 V2](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht812v2), which I bought [from Amazon Ireland](https://www.amazon.ie/dp/B0BL1CXL27).
+ATA means analogue telephone adapter. For this build, the important detail is that it needs an **FXS** port. FXS is the port that powers an analogue phone. FXO connects to a real landline. I used the [Grandstream HT812 V2](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht812v2), bought [from Amazon Ireland](https://www.amazon.ie/dp/B0BL1CXL27).
 
-The phone I bought was a big-button analogue handset also from [Amazon Ireland](https://www.amazon.ie/dp/B0DV1TKG96). As far as I understand, this can be done with any analogue phone that has an RJ11 connector. The HT812 has two FXS ports, which is more than I need for one phone but useful for testing or a second handset later. The [HT818](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht818) also exists, but that has eight FXS ports. Lovely if you are building a small hotel phone system. Mildly ridiculous for one child phone.
+The phone is a big-button analogue handset also from [Amazon Ireland](https://www.amazon.ie/dp/B0DV1TKG96). Any RJ11 analogue phone should work. The HT812 has two FXS ports, which is more than I need for one handset but useful for testing or a second one later. The [HT818](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht818) has eight FXS ports, which is lovely for a small hotel phone system and mildly ridiculous for one child phone.
 
 ## The working version
 
@@ -64,9 +62,7 @@ Right now the phone is a one-digit interface.
 9 = play a test prompt
 ```
 
-The child does not need to know those numbers. The physical buttons get labels or photos. The backend maps each digit to a fixed action.
-
-So pressing a button is not really "dialling a number". It is triggering a controlled workflow.
+The child does not need to know those numbers. The physical buttons get labels or photos, and the backend maps each digit to a fixed action. Pressing a button is not really "dialling a number". It is triggering a controlled workflow.
 
 ```text
 button press -> ATA -> Asterisk -> local action
@@ -74,21 +70,21 @@ button press -> ATA -> Asterisk -> local action
 
 That is the architectural trick. Do not make the phone clever. Make the backend clever. There is a decent body of work around [tangible interaction for children](https://www.mmi.ifi.lmu.de/pubdb/publications/pub/liyanhong2021cc/liyanhong2021cc.pdf), which is the academic way of saying that sometimes a real object beats another glowing rectangle.
 
-There is also something pleasingly ridiculous about the whole thing. Most of the useful ideas here are old. Not "[last framework cycle](https://www.herodevs.com/blog-posts/sunsetting-a-framework-lessons-from-angularjs)" old, proper old. PBXs, extension routing, [tone signalling](https://www.itu.int/rec/T-REC-Q.23-198811-I/en), recorded prompts, call contexts. This is roughly seventy-year-old territory in computing terms, which makes it the Triassic. I am not inventing a new interaction model so much as bolting Home Assistant onto very settled telephony ideas and letting them do what they were always good at.
+There is something pleasingly ridiculous about the whole thing. Most of the useful ideas here are proper old. PBXs, extension routing, tone signalling, recorded prompts, call contexts. I am bolting Home Assistant onto settled telephony ideas and letting them do what they were always good at.
 
 ## Configuring the ATA
 
-The HT812 is configured through its own web UI. It works, but it is enormous. Grandstream exposes a frightening amount of telephony machinery in there, including SIP profiles, codec order, DTMF behaviour, dial plans, NAT settings, provisioning, certificates, call features, and a swamp of P-values. Useful, but not exactly a child-friendly interface for the adult either.
+The HT812 is configured through its own web UI. It works, but it is enormous. Grandstream exposes SIP profiles, codec order, DTMF behaviour, dial plans, NAT settings, provisioning, certificates, call features, and a swamp of P-values. Useful, but not exactly a child-friendly interface for the adult either.
 
-For this build, only a small slice mattered. Profile 1 points at the Home Assistant Asterisk add-on as the SIP server. FXS port 1 uses `child-phone` as both the SIP user ID and authenticate ID. The password matches the Asterisk `pjsip_custom.conf` secret. DTMF uses [RFC 4733](https://datatracker.ietf.org/doc/html/rfc4733), and the dial plan is `{ xS0 }`, which sends a single digit immediately to Asterisk.
+Only a small slice mattered. Profile 1 points at the Home Assistant Asterisk add-on as the SIP server. FXS port 1 uses `child-phone` as both the SIP user ID and authenticate ID. The password matches the Asterisk `pjsip_custom.conf` secret. DTMF uses [RFC 4733](https://datatracker.ietf.org/doc/html/rfc4733), and the dial plan is `{ xS0 }`, which sends a single digit immediately to Asterisk.
 
-The full ATA walkthrough [lives in the companion repository as a guide](https://github.com/andremmfaria/child-phone/blob/main/config/HT812V2/README.md). That is where the web UI details belong, because copying the whole thing into the article would be cruel and not especially useful.
+The full ATA walkthrough [lives in the companion repository](https://github.com/andremmfaria/child-phone/blob/main/config/HT812V2/README.md). That is where the web UI detail belongs.
 
 ## Configuring Asterisk
 
 ### Asterisk does the routing
 
-The ATA registers to Asterisk as a SIP endpoint called `child-phone`. Asterisk runs inside Home Assistant using the TECH7Fox Asterisk add-on. If you want the grown-up version of this idea, GÉANT has a useful guide to [implementing an IP telephone exchange using Asterisk](https://archive.geant.org/projects/gn3/geant/services/cbp/Documents/cbp-19_implementing-an-ip-telephone-exchange-using-asterisk.pdf).
+The ATA registers to Asterisk as a SIP endpoint called `child-phone`. Asterisk runs inside Home Assistant using the TECH7Fox add-on. If you want the grown-up version, GÉANT has a useful guide to [implementing an IP telephone exchange using Asterisk](https://archive.geant.org/projects/gn3/geant/services/cbp/Documents/cbp-19_implementing-an-ip-telephone-exchange-using-asterisk.pdf).
 
 The add-on creates two useful config directories.
 
@@ -140,7 +136,7 @@ callerid="Child Phone" <201>
 dtmf_mode=rfc4733
 ```
 
-The important bit is that the AOR block and the endpoint block are both named `child-phone`. PJSIP distinguishes them by `type`, and the endpoint points back to that AOR with `aors=child-phone`. The full config, including the identify block and the rest of the project files, is in the [Asterisk guide in the companion repo](https://github.com/andremmfaria/child-phone/blob/main/config/asterisk/README.md).
+The important bit is that the AOR block and endpoint block are both named `child-phone`. PJSIP distinguishes them by `type`, and the endpoint points back to that AOR with `aors=child-phone`. The full config is in the [Asterisk guide in the companion repo](https://github.com/andremmfaria/child-phone/blob/main/config/asterisk/README.md).
 
 ### Default deny, because children press buttons
 
@@ -178,7 +174,7 @@ exten => s,1,UserEvent(ChildPhoneButton,Source: child-phone,Button: ${ARG1})
 
 That last `_X!` rule is important. It rejects everything that has not been explicitly defined. There is no fallback like "if it looks like a number, send it to the trunk".
 
-The ATA also has a digit map, but in the current build it is intentionally simple. It only improves button behaviour by sending a single digit immediately. The Asterisk context is the real security boundary. The ATA makes the phone feel responsive; the PBX decides what is allowed.
+The ATA digit map only makes the phone feel responsive by sending one digit immediately. The Asterisk context is the real security boundary. The PBX decides what is allowed.
 
 ## Recording a message is just another extension
 
@@ -253,22 +249,22 @@ The bot token stays in Home Assistant. The repository contains config templates 
 
 ## Telegram delivery
 
-The Telegram side is intentionally small. I created a bot through BotFather, following Telegram's official [bot creation tutorial](https://core.telegram.org/bots/tutorial#obtain-your-bot-token), then created a private broadcast channel for the phone messages and added the bot there. Home Assistant only needs the bot token and the destination chat. The first test was a plain text message from Home Assistant. The real test was a completed WAV recording landing in the same channel.
+The Telegram side is intentionally small. I created a bot through BotFather, then created a private broadcast channel for the phone messages and added the bot there. Home Assistant only needs the bot token and destination chat. The real test was a completed WAV recording landing in the channel.
 
 ![Telegram broadcast channel receiving a Home Assistant test message and a child phone WAV recording](telegram-child-phone-recording.png)
 
 ## Home Assistant and Asterisk
 
-There is a useful Home Assistant ecosystem around this already. The project I used is the TECH7Fox Asterisk add-on. It runs Asterisk inside Home Assistant and exposes the real Asterisk configuration files under the add-on config directory. There is also a HACS Asterisk integration that connects to Asterisk over AMI, the Asterisk Manager Interface. That can expose device state, registration state, connected line, DTMF events, and a generic `send_action` service for AMI commands like `Ping`, `Originate`, or `Hangup`.
+The TECH7Fox Asterisk add-on runs Asterisk inside Home Assistant and exposes the real config files under the add-on config directory. The HACS Asterisk integration connects over AMI and can expose device state, registration state, connected line, DTMF events, and a generic `send_action` service.
 
-There was one catch. With the current add-on/integration setup, quick-dialling a Home Assistant action directly is not quite a first-class path yet. Asterisk can emit AMI `UserEvent`s from its call routing, but the Home Assistant integration did not forward those events into Home Assistant as normal events. I opened [TECH7Fox/asterisk-hass-integration PR #126](https://github.com/TECH7Fox/asterisk-hass-integration/pull/126) to add that. I also opened [TECH7Fox/asterisk-hass-addons PR #453](https://github.com/TECH7Fox/asterisk-hass-addons/pull/453) to make AMI network access configurable, so Home Assistant can connect without loosening access more than necessary.
+There was one catch. Quick-dialling a Home Assistant action directly is not quite first-class yet. Asterisk can emit AMI `UserEvent`s, but the integration did not forward those into Home Assistant as normal events. I opened [TECH7Fox/asterisk-hass-integration PR #126](https://github.com/TECH7Fox/asterisk-hass-integration/pull/126) for that, and [TECH7Fox/asterisk-hass-addons PR #453](https://github.com/TECH7Fox/asterisk-hass-addons/pull/453) so Home Assistant can connect without loosening AMI access more than necessary.
 
 For this build, I split responsibilities this way.
 
 - **Asterisk add-on** - the actual PBX and routing engine
 - **Asterisk integration** - monitoring and Home Assistant event/control bridge
 
-I do not make the Home Assistant integration the core path for child button behaviour. That belongs in Asterisk itself. It is lower-level, more deterministic, and less likely to break because a Home Assistant custom integration changed an entity model. Home Assistant should observe and react. Asterisk should decide what a dialled digit means.
+Home Assistant should observe and react. Asterisk should decide what a dialled digit means. That path is lower-level, more deterministic, and less likely to break because a custom integration changed an entity model.
 
 ## What I Made
 
@@ -303,7 +299,7 @@ I am not pretending it is an emergency phone. It is a family communication devic
 
 ## Privacy is part of the build
 
-Recorded child voice messages are private data. The plumbing is simple enough that it is easy to forget that, and research on [internet-connected toys that listen](https://techpolicylab.uw.edu/wp-content/uploads/2017/10/Toys-That-Listen_CHI-2017.pdf) is a useful reminder that child audio should be treated as sensitive by default. For this setup, I use these rules.
+Recorded child voice messages are private data. Research on [internet-connected toys that listen](https://techpolicylab.uw.edu/wp-content/uploads/2017/10/Toys-That-Listen_CHI-2017.pdf) is a useful reminder that child audio should be treated as sensitive by default. For this setup, I use these rules.
 
 - recordings go only to a private parent-controlled Telegram destination
 - bot tokens and chat IDs stay in Home Assistant secrets/config, not in the public repo
@@ -311,7 +307,7 @@ Recorded child voice messages are private data. The plumbing is simple enough th
 - recordings should have a retention policy rather than piling up forever
 - failure should be visible because a missed upload should not silently disappear
 
-The build works. The next hardening step is operational rather than architectural, retention, monitoring, and backup/restore of the ATA and Asterisk config.
+The next hardening step is operational rather than architectural. Retention, monitoring, and backup/restore of the ATA and Asterisk config matter more now than more features.
 
 ## The build, in one page
 
@@ -327,10 +323,8 @@ big-button RJ11 phone
   -> Telegram delivery for completed WAV files
 ```
 
-The source config lives here.
+The source config lives at [github.com/andremmfaria/child-phone](https://github.com/andremmfaria/child-phone).
 
-- [github.com/andremmfaria/child-phone](https://github.com/andremmfaria/child-phone)
+This can still become an actual phone later. The missing commercial piece is a SIP trunk from a provider such as [VoIPLine Ireland](https://www.voipline.ie/sip-trunking), with numbers purchased separately. That would let Asterisk place and receive calls through the ordinary phone network.
 
-This can still become an actual phone later. The missing commercial piece is a SIP trunk from a provider such as [VoIPLine Ireland](https://www.voipline.ie/sip-trunking), which lists SIP lines from around EUR 1 per channel per month, with numbers purchased separately. That would let Asterisk place and receive calls through the ordinary phone network.
-
-It keeps the child-facing device physical and boring, which is exactly what I want. All the complexity stays in software, where it can be inspected, backed up, changed, and locked down. Sometimes the right smart device is a dumb device with a better backend.
+It keeps the child-facing device physical and boring, which is exactly what I want. All the complexity stays in software, where it can be inspected, backed up, changed, and locked down.
