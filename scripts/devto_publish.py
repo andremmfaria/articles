@@ -5,24 +5,26 @@ import os
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
-from typing import Any, Dict, List, Tuple
+import urllib.request
+from typing import Any
 
 
 def read_file(path: str) -> str:
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
 
-def extract_front_matter(raw: str) -> Tuple[str, str]:
+def extract_front_matter(raw: str) -> tuple[str, str]:
     m = re.match(r"^---\s*(.*?)\s*---\s*(.*)$", raw, re.DOTALL)
     if not m:
         raise ValueError("YAML front matter not found at top of file")
     return m.group(1), m.group(2)
 
 
-def parse_simple_yaml(yaml_text: str) -> Dict[str, Any]:
-    meta: Dict[str, Any] = {}
+def parse_simple_yaml(yaml_text: str) -> dict[str, Any]:
+    meta: dict[str, Any] = {}
     lines = yaml_text.splitlines()
     i = 0
     while i < len(lines):
@@ -33,7 +35,11 @@ def parse_simple_yaml(yaml_text: str) -> Dict[str, Any]:
             key = m.group(1)
             val = m.group(2)
             # handle quoted strings
-            if val.startswith(('"', "'")) and val.endswith(('"', "'")) and len(val) >= 2:
+            if (
+                val.startswith(('"', "'"))
+                and val.endswith(('"', "'"))
+                and len(val) >= 2
+            ):
                 val = val[1:-1]
             # boolean
             if val.lower() in ("true", "false"):
@@ -41,17 +47,17 @@ def parse_simple_yaml(yaml_text: str) -> Dict[str, Any]:
             # inline tags [a, b, c]
             elif key == "tags" and val.startswith("[") and val.endswith("]"):
                 inner = val[1:-1]
-                tags = [t.strip() for t in inner.split(',') if t.strip()]
+                tags = [t.strip() for t in inner.split(",") if t.strip()]
                 meta[key] = tags
             elif val == "":
                 # possible multiline list under this key (e.g., tags: \n  - a)
                 # collect indented - items
-                items: List[str] = []
+                items: list[str] = []
                 j = i + 1
                 while j < len(lines):
                     lm = re.match(r"^\s*-\s+(.*)\s*$", lines[j])
                     if lm:
-                        items.append(lm.group(1).strip('"\''))
+                        items.append(lm.group(1).strip("\"'"))
                         j += 1
                     else:
                         break
@@ -66,7 +72,13 @@ def parse_simple_yaml(yaml_text: str) -> Dict[str, Any]:
     return meta
 
 
-def build_payload(meta: Dict[str, Any], body: str, publish_flag: bool, minimal: bool, remove_headers: List[str]) -> Dict[str, Any]:
+def build_payload(
+    meta: dict[str, Any],
+    body: str,
+    publish_flag: bool,
+    minimal: bool,
+    remove_headers: list[str],
+) -> dict[str, Any]:
     title = meta.get("title")
     if not title:
         raise ValueError("Missing title in front matter")
@@ -77,7 +89,7 @@ def build_payload(meta: Dict[str, Any], body: str, publish_flag: bool, minimal: 
     if published is None:
         published = False
 
-    article: Dict[str, Any] = {
+    article: dict[str, Any] = {
         "title": title,
         "published": bool(published),
         "body_markdown": body,
@@ -127,21 +139,58 @@ def rewrite_local_media_urls(body: str, file_path: str, repo: str, branch: str) 
     return body
 
 
-def main(argv: List[str]) -> int:
+def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="DEV.to publish helper")
-    parser.add_argument("--file", dest="file", required=True, help="Path to Markdown file")
-    parser.add_argument("--api-key", dest="api_key", required=False, help="DEV.to API key (defaults to DEVTO_API_KEY)")
-    parser.add_argument("--publish", dest="publish", action="store_true", help="Force published=true")
-    parser.add_argument("--minimal", dest="minimal", action="store_true", help="Send only title/published/body")
-    parser.add_argument("--remove-headers", dest="remove_headers", default="", help="CSV of headers to omit: Cover,Tags,Description,CanonicalUrl,Series")
-    parser.add_argument("--repo", dest="repo", default=os.environ.get("GITHUB_REPOSITORY", "andremmfaria/articles"), help="GitHub repo used for local media URLs")
-    parser.add_argument("--branch", dest="branch", default=os.environ.get("GITHUB_REF_NAME", "main"), help="GitHub branch used for local media URLs")
-    parser.add_argument("--dry-run", dest="dry_run", action="store_true", help="Print payload JSON and exit")
+    parser.add_argument(
+        "--file", dest="file", required=True, help="Path to Markdown file"
+    )
+    parser.add_argument(
+        "--api-key",
+        dest="api_key",
+        required=False,
+        help="DEV.to API key (defaults to DEVTO_API_KEY)",
+    )
+    parser.add_argument(
+        "--publish", dest="publish", action="store_true", help="Force published=true"
+    )
+    parser.add_argument(
+        "--minimal",
+        dest="minimal",
+        action="store_true",
+        help="Send only title/published/body",
+    )
+    parser.add_argument(
+        "--remove-headers",
+        dest="remove_headers",
+        default="",
+        help="CSV of headers to omit: Cover,Tags,Description,CanonicalUrl,Series",
+    )
+    parser.add_argument(
+        "--repo",
+        dest="repo",
+        default=os.environ.get("GITHUB_REPOSITORY", "andremmfaria/articles"),
+        help="GitHub repo used for local media URLs",
+    )
+    parser.add_argument(
+        "--branch",
+        dest="branch",
+        default=os.environ.get("GITHUB_REF_NAME", "main"),
+        help="GitHub branch used for local media URLs",
+    )
+    parser.add_argument(
+        "--dry-run",
+        dest="dry_run",
+        action="store_true",
+        help="Print payload JSON and exit",
+    )
     args = parser.parse_args(argv)
 
     api_key = args.api_key or os.environ.get("DEVTO_API_KEY", "")
     if not api_key and not args.dry_run:
-        print("DEVTO_API_KEY not provided. Set --api-key or DEVTO_API_KEY env var.", file=sys.stderr)
+        print(
+            "DEVTO_API_KEY not provided. Set --api-key or DEVTO_API_KEY env var.",
+            file=sys.stderr,
+        )
         return 1
 
     if not os.path.isfile(args.file):
@@ -153,7 +202,7 @@ def main(argv: List[str]) -> int:
     meta = parse_simple_yaml(yaml_text)
     body = rewrite_local_media_urls(body, args.file, args.repo, args.branch)
 
-    remove_headers = [h.strip() for h in args.remove_headers.split(',') if h.strip()]
+    remove_headers = [h.strip() for h in args.remove_headers.split(",") if h.strip()]
     payload = build_payload(meta, body, args.publish, args.minimal, remove_headers)
     json_payload = json.dumps(payload, ensure_ascii=False)
     article_id = str(meta.get("id") or "").strip()
@@ -162,14 +211,15 @@ def main(argv: List[str]) -> int:
         print(json_payload)
         return 0
 
-    # Perform request using Python stdlib
-    import urllib.error
-    import urllib.request
     method = "PUT" if article_id else "POST"
-    url = f"https://dev.to/api/articles/{article_id}" if article_id else "https://dev.to/api/articles"
+    url = (
+        f"https://dev.to/api/articles/{article_id}"
+        if article_id
+        else "https://dev.to/api/articles"
+    )
     req = urllib.request.Request(
         url=url,
-        data=json_payload.encode('utf-8'),
+        data=json_payload.encode("utf-8"),
         headers={
             "api-key": api_key,
             "Content-Type": "application/json",
@@ -180,23 +230,35 @@ def main(argv: List[str]) -> int:
     for attempt in range(1, 6):
         try:
             with urllib.request.urlopen(req) as resp:
-                response_body = resp.read().decode('utf-8')
+                response_body = resp.read().decode("utf-8")
                 response = json.loads(response_body)
                 print(f"{method} {url}")
-                print(json.dumps({
-                    "id": response.get("id"),
-                    "title": response.get("title"),
-                    "url": response.get("url"),
-                    "edited_at": response.get("edited_at"),
-                    "published": response.get("published"),
-                }, ensure_ascii=False))
+                print(
+                    json.dumps(
+                        {
+                            "id": response.get("id"),
+                            "title": response.get("title"),
+                            "url": response.get("url"),
+                            "edited_at": response.get("edited_at"),
+                            "published": response.get("published"),
+                        },
+                        ensure_ascii=False,
+                    )
+                )
                 return 0
         except urllib.error.HTTPError as e:
             error_body = e.read().decode("utf-8", errors="replace")
             if e.code == 429 and attempt < 5:
                 retry_after = e.headers.get("Retry-After")
-                delay = int(retry_after) if retry_after and retry_after.isdigit() else attempt * 10
-                print(f"Rate limited by DEV.to; retrying in {delay}s (attempt {attempt}/5)", file=sys.stderr)
+                delay = (
+                    int(retry_after)
+                    if retry_after and retry_after.isdigit()
+                    else attempt * 10
+                )
+                print(
+                    f"Rate limited by DEV.to; retrying in {delay}s (attempt {attempt}/5)",
+                    file=sys.stderr,
+                )
                 time.sleep(delay)
                 continue
             print(f"API error: HTTP {e.code} {e.reason}", file=sys.stderr)
@@ -205,7 +267,7 @@ def main(argv: List[str]) -> int:
             print(f"Request URL: {url}", file=sys.stderr)
             print(f"Article title: {meta.get('title', '')}", file=sys.stderr)
             return 2
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, urllib.error.URLError) as e:
             print(f"API error: {e}", file=sys.stderr)
             print(f"Request method: {method}", file=sys.stderr)
             print(f"Request URL: {url}", file=sys.stderr)
