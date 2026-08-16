@@ -161,6 +161,7 @@ def main(argv: List[str]) -> int:
         return 0
 
     # Perform request using Python stdlib
+    import urllib.error
     import urllib.request
     method = "PUT" if article_id else "POST"
     url = f"https://dev.to/api/articles/{article_id}" if article_id else "https://dev.to/api/articles"
@@ -176,10 +177,25 @@ def main(argv: List[str]) -> int:
     )
     try:
         with urllib.request.urlopen(req) as resp:
-            body = resp.read().decode('utf-8')
+            response_body = resp.read().decode('utf-8')
+            response = json.loads(response_body)
             print(f"{method} {url}")
-            print(body)
+            print(json.dumps({
+                "id": response.get("id"),
+                "title": response.get("title"),
+                "url": response.get("url"),
+                "edited_at": response.get("edited_at"),
+                "published": response.get("published"),
+            }, ensure_ascii=False))
             return 0
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode("utf-8", errors="replace")
+        print(f"API error: HTTP {e.code} {e.reason}", file=sys.stderr)
+        print(f"Response body: {error_body[:1000]}", file=sys.stderr)
+        print(f"Request method: {method}", file=sys.stderr)
+        print(f"Request URL: {url}", file=sys.stderr)
+        print(f"Article title: {meta.get('title', '')}", file=sys.stderr)
+        return 2
     except Exception as e:
         print(f"API error: {e}", file=sys.stderr)
         print(f"Request method: {method}", file=sys.stderr)
