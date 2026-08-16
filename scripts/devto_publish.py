@@ -92,6 +92,7 @@ def build_payload(meta: Dict[str, Any], body: str, publish_flag: bool, minimal: 
             article["tags"] = tags
         if meta.get("cover_image") and ("Cover" not in remove_headers):
             article["cover_image"] = meta["cover_image"]
+            article["main_image"] = meta["cover_image"]
         if meta.get("canonical_url") and ("CanonicalUrl" not in remove_headers):
             article["canonical_url"] = meta["canonical_url"]
         if meta.get("series") and ("Series" not in remove_headers):
