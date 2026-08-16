@@ -119,7 +119,7 @@ The alternative is skills. In OpenClaw and in tools like [oh-my-openagent](https
 
 A skill entry in the context looks like this:
 
-```
+```text
 truenas: Manage TrueNAS SCALE: storage, sharing, services, VMs, alerts, replication.
 ```
 
