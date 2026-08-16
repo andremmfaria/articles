@@ -25,6 +25,8 @@ Wii Remote -> Bluetooth Classic ESP32 -> USB serial Home Assistant add-on -> MQT
 
 The ESP32 handles the awkward Bluetooth side. Home Assistant handles the useful automation side. MQTT sits between them as the boring, reliable contract. That split is the design decision everything else follows from.
 
+![Wii Remote beside the ESP32 serial bridge on a desk](wiimote-and-esp32-bridge-bench.jpg)
+
 ---
 
 ## 1. Why a Wii Remote Makes Sense
@@ -33,7 +35,7 @@ A Wii Remote is an odd thing to put in a home automation system, but only if you
 
 Most smart home controls are either too abstract or too fragile. Phones are powerful, but they are not good shared controls. Voice assistants are convenient until they mishear you, lose context, or need the cloud to be in a good mood. Wall switches are reliable, but fixed. A Wii Remote sits in a useful middle ground because it is physical, cheap, wireless, programmable, and already designed to be held without looking at it. The buttons are distinct enough that you can build muscle memory around them. For some automations, that matters more than having a beautiful UI.
 
-For children, that physicality matters even more. A Wii Remote is easy to hold, forgiving, and legible in a way a touchscreen often is not. That intuition has some backing in HCI work on [tangible interaction for children's creative learning](https://www.mmi.ifi.lmu.de/pubdb/publications/pub/liyanhong2021cc/liyanhong2021cc.pdf): physical objects can make digital behavior feel more immediate and exploratory.
+For children, that physicality matters even more. A Wii Remote is easy to hold, forgiving, and legible in a way a touchscreen often is not. That intuition has some backing in HCI work on [tangible interaction for children&#39;s creative learning](https://www.mmi.ifi.lmu.de/pubdb/publications/pub/liyanhong2021cc/liyanhong2021cc.pdf): physical objects can make digital behavior feel more immediate and exploratory.
 
 For example, a practical mapping could look like this:
 
@@ -61,6 +63,8 @@ The hardware list is deliberately short.
 * one USB cable that carries data, not only power
 * a Home Assistant host with add-on support
 * an MQTT broker, usually the official [Mosquitto broker add-on](https://github.com/home-assistant/addons/tree/master/mosquitto)
+
+![Powered ESP32 development board in its red case](esp32-bridge-powered-close-up.jpg)
 
 The ESP32 does not need Wi-Fi for this project. That was intentional. It would be possible to make the ESP32 connect directly to Wi-Fi and publish MQTT itself. In fact, that is probably the first version many people would imagine. But it also means putting Wi-Fi credentials, MQTT configuration, reconnect logic, TLS decisions, and broker behavior into a tiny firmware project whose real job, Bluetooth HID with a Wii Remote, is already tricky enough. Instead, the ESP32 stays narrow. It pairs with the Wii Remote, reads controller state, and writes JSON lines to USB serial.
 
@@ -120,6 +124,12 @@ And every ten seconds the firmware emits a heartbeat.
 ```json
 {"type":"heartbeat","device":"esp32","wiimote":1,"connected":true,"battery":87}
 ```
+
+<!-- markdownlint-disable MD033 -->
+<video controls muted playsinline>
+  <source src="wiimote-serial-json-demo.mp4" type="video/mp4">
+</video>
+<!-- markdownlint-enable MD033 -->
 
 The protocol is line-delimited JSON. One object per line. That makes it easy to debug with a serial monitor. If the ESP32 is working, you can see the messages before Home Assistant is involved at all. That property is worth more than it looks. When an integration spans Bluetooth, firmware, USB, containers, MQTT, and Home Assistant automations, the ability to isolate one boundary with a serial monitor saves a lot of guessing.
 
@@ -268,6 +278,12 @@ That works, but a good Home Assistant integration should also feel native once i
 That means the Wii Remote shows up in Home Assistant as something you can inspect, not just a pile of hidden MQTT topics. The discovery payloads are retained and republished after MQTT reconnects. That matters because Home Assistant, the broker, and the add-on are separate processes. Restarting one of them should not make the entities disappear forever. This is one of those unglamorous reliability details that makes the project feel much less like a weekend sketch.
 
 Once the ESP32 is flashed and the add-on is running, the working loop is satisfyingly direct. Press `1 + 2` on the Wii Remote and the controller should connect to the ESP32 automatically (since it is always polling for connections from any nearby device). Then, the add-on logs the connection status, MQTT receives button topics and Home Assistant reacts to the messages on said topics.
+
+<!-- markdownlint-disable MD033 -->
+<video controls muted playsinline>
+  <source src="wiimote-home-assistant-living-room-demo.mp4" type="video/mp4">
+</video>
+<!-- markdownlint-enable MD033 -->
 
 The raw automation form is useful when you want precise control.
 
