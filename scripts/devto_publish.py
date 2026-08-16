@@ -167,7 +167,11 @@ def main(argv: List[str]) -> int:
     req = urllib.request.Request(
         url=url,
         data=json_payload.encode('utf-8'),
-        headers={"api-key": api_key, "Content-Type": "application/json"},
+        headers={
+            "api-key": api_key,
+            "Content-Type": "application/json",
+            "User-Agent": "andremmfaria-articles-publisher/1.0",
+        },
         method=method,
     )
     try:
@@ -178,8 +182,9 @@ def main(argv: List[str]) -> int:
             return 0
     except Exception as e:
         print(f"API error: {e}", file=sys.stderr)
-        print("Request payload:", file=sys.stderr)
-        print(json_payload, file=sys.stderr)
+        print(f"Request method: {method}", file=sys.stderr)
+        print(f"Request URL: {url}", file=sys.stderr)
+        print(f"Article title: {meta.get('title', '')}", file=sys.stderr)
         return 2
 
 
