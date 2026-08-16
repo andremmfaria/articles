@@ -73,14 +73,15 @@ jobs:
 
           extra_args=()
           if [[ "${ACT:-}" == "true" ]]; then
-            echo "Running under act; enabling devto-cli dry-run mode."
+            echo "Running under act; enabling DEV.to dry-run mode."
             extra_args+=(--dry-run)
           fi
 
           while IFS= read -r -d '' file; do
             echo "Publishing $file"
-            npx -y @sinedied/devto-cli push "$file" \
-              --token "$DEVTO_TOKEN" \
+            python scripts/devto_publish.py \
+              --file "$file" \
+              --api-key "$DEVTO_TOKEN" \
               --repo "${{ github.repository }}" \
               --branch "${{ github.ref_name }}" \
               "${extra_args[@]}"
