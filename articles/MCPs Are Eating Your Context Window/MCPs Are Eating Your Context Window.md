@@ -14,17 +14,17 @@ date: '2026-05-24T02:53:21Z'
 
 I was looking at my [OpenClaw](https://openclaw.ai) token usage data when I noticed something odd. The numbers were dominated by cache reads, tens of millions of tokens per week, on a setup where the actual conversations were relatively short. The output tokens, the ones where the model is actually thinking, were a small fraction of the total.
 
-The culprit turned out to be something I had not thought to question: MCP servers.
+The culprit turned out to be something I had not thought to question. MCP servers.
 
 This article is about what MCP tool schemas actually cost, why most people miss it, and how skills solve the problem by loading lazily instead of front-loading everything into every turn. The numbers are real, measured from a real setup, priced against real provider rates.
 
----
+The short version is this. Keep MCPs where the schema is the product, especially for third-party APIs that change often or need strict parameter validation. For stable local infrastructure, prefer a small skill that teaches the agent which CLI, library, or API wrapper to use, then load the full instructions only when the task needs them.
 
 ## 1. What MCP servers actually inject
 
 [Model Context Protocol](https://modelcontextprotocol.io) is a standard for connecting AI agents to external services. The idea is straightforward: define a set of tools, and the model can call them. OPNsense integration? Here are 133 tools. TrueNAS SCALE? Here are 278. GitHub? Here are 101.
 
-The problem is how those tools reach the model. Every tool ships a JSON schema describing its name, description, parameters, types, enums, and constraints. When an MCP server is active, [every single one of those schemas gets serialised and injected with every API call](https://www.mindstudio.ai/blog/claude-code-mcp-server-token-overhead), whether you are going to use any of them or not. This is not a quirk of any particular client. It is how the MCP spec works. The tools array goes with every request.
+The problem is how those tools reach the model. Every tool ships a JSON schema describing its name, description, parameters, types, enums, and constraints. In eager MCP integrations, [every single one of those schemas gets serialised and injected with the model request](https://www.mindstudio.ai/blog/claude-code-mcp-server-token-overhead), whether you are going to use any of them or not. This is not the fault of one particular client. It is the cost of exposing a large active tool surface upfront.
 
 Here is what that looks like in practice, measured from my homelab setup:
 
@@ -40,8 +40,6 @@ Total first-turn context: approximately **41,000 tokens**. Workspace files accou
 
 Run 215 turns per day (a moderate multi-agent setup) and you are pushing roughly 9 million context tokens daily just to describe tools you rarely use.
 
----
-
 ## 2. This is not a homelab problem
 
 A few well-known MCP servers to put scale in perspective:
@@ -50,7 +48,7 @@ A few well-known MCP servers to put scale in perspective:
 |---|---|---|---|---|
 | [GitHub MCP](https://github.com/github/github-mcp-server) | 101 | 52 | ~64,600 / ~30,300 | [Official discussion #1182](https://github.com/github/github-mcp-server/discussions/1182) |
 | [TrueNAS MCP](https://github.com/truenas/api_client) | 278 | All | ~27,800 | Measured |
-| [OPNsense MCP](https://github.com/yourusername/opnsense-mcp-server) | 133 | All | ~13,300 | Measured |
+| OPNsense MCP | 133 | All | ~13,300 | Measured local server |
 | [Datadog MCP](https://docs.datadoghq.com/bits_ai/mcp_server) | 40+ (16 core) | 16 core | ~4,000+ | Datadog docs |
 | [AWS MCP suite](https://github.com/awslabs/mcp) | 50+ across 20 servers | Per server (5-15) | ~1,500-3,000 each | AWS Labs repo |
 | [Atlassian Rovo MCP](https://github.com/atlassian/atlassian-mcp-server) | ~12-20 | All | ~3,000-5,000 | Estimated |
@@ -63,22 +61,18 @@ A few well-known MCP servers to put scale in perspective:
 
 A developer running GitHub MCP, Slack MCP, and a Postgres MCP alongside their native tools is starting every single message with roughly **40,000 tokens** of context overhead before they have typed a word. GitHub MCP alone at full capacity burns **64,600 tokens**, consuming 32% of Claude Sonnet's 200K context window before the conversation starts.
 
----
-
 ## 3. This affects every tool that uses MCP
 
-This is not an OpenClaw issue. It is a consequence of how MCP works architecturally, and it affects every AI tool that integrates with MCP servers:
+This is not an OpenClaw issue. It is a consequence of eager MCP tool exposure, and it affects every AI tool that integrates with MCP servers.
 
 | Tool | MCP support | Injection pattern | Notes |
 |---|---|---|---|
 | [Claude Code](https://claude.ai/code) | Full native | Eager, every API call | [Issue #44536](https://github.com/anthropics/claude-code/issues/44536): ToolSearch experiment, 85% reduction when enabled |
 | [Codex CLI](https://github.com/openai/codex) | Full | Eager, per turn | Used in [Datadog + Codex integration examples](https://techcommunity.microsoft.com/blog/appsonazureblog/get-started-with-datadog-mcp-server-in-azure-sre-agent/4497123) |
-| [OpenCode](https://opencode.ai) | Full | Eager by default; lazy via [opencode-mcp-tool-search plugin](https://lobehub.com/mcp/francisco-m001-opencode-mcp-tool-search) | Same underlying problem; community plugin fixes it |
+| [OpenCode](https://opencode.ai) | Full | Eager by default, lazy via [opencode-mcp-tool-search plugin](https://lobehub.com/mcp/francisco-m001-opencode-mcp-tool-search) | Same underlying problem, community plugin fixes it |
 | OpenClaw | Full | Eager, per turn | What this article is about |
 
-The MCP spec itself requires the tools array to be sent with each API call. The only documented escape valve is "ToolSearch", a meta-tool that lets the model search for tools by name rather than receiving all schemas upfront. Claude Code introduced this experimentally, with a [reported 85% token reduction](https://github.com/anthropics/claude-code/issues/44536). GitHub MCP reduced its default toolset from 101 to 52 tools specifically in response to [user complaints about context overhead](https://github.com/github/github-mcp-server/discussions/1182).
-
----
+Eager clients still need a way to avoid sending every schema upfront. The usual escape valve is "ToolSearch", a meta-tool that lets the model search for tools by name rather than receiving all schemas in the initial request. Claude Code introduced this experimentally, with a [reported 85% token reduction](https://github.com/anthropics/claude-code/issues/44536). GitHub MCP reduced its default toolset from 101 to 52 tools specifically in response to [user complaints about context overhead](https://github.com/github/github-mcp-server/discussions/1182).
 
 ## 4. What it costs per provider
 
@@ -111,9 +105,7 @@ These are costs from overhead alone, before any actual work is done. On Sonnet w
 
 Prompt caching helps significantly for repeated context (the tool schemas do not change turn-to-turn, so they cache well). But even at the cached rate, the overhead is material at scale.
 
----
-
-## 5. Skills: lazy loading as the fix
+## 5. Skills as lazy loading
 
 The alternative is skills. In OpenClaw and in tools like [oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent) for OpenCode, a skill is a markdown file that tells the model how to use a capability. Only a name and a short description enter the context upfront. The full instructions are loaded when the model actually needs them.
 
@@ -138,8 +130,6 @@ The token savings from replacing three MCP servers:
 
 First-turn context drops from ~41,000 tokens to roughly ~10,000. A 75% reduction in baseline overhead per turn.
 
----
-
 ## 6. What skills look like in practice
 
 A skill is a SKILL.md file with a short frontmatter description and usage instructions. The model reads it when needed. The skill documents three things: how to authenticate, what the primary command pattern is, and what the fallback is when the primary does not cover the full surface.
@@ -150,7 +140,7 @@ Credentials live in the environment, not in the skill file. In OpenClaw, env var
 { "env": { "TRUENAS_URL": "https://truenas.host:50443", "TRUENAS_API_KEY": "..." } }
 ```
 
-For API key auth, that is all the setup needed. For OAuth-based services, the approach shifts to pre-authenticated CLI state: `gh auth login` stores credentials in `~/.config/gh/hosts.yml`; `jira init` writes an API token to `~/.config/.jira/.config.yml`. After that one-time setup, skill calls carry no credentials in the command itself.
+For API key auth, that is all the setup needed. For OAuth-based services, the approach shifts to pre-authenticated CLI state: `gh auth login` stores credentials in `~/.config/gh/hosts.yml`, and `jira init` writes an API token to `~/.config/.jira/.config.yml`. After that one-time setup, skill calls carry no credentials in the command itself.
 
 Each skill documents a primary path and a fallback. For TrueNAS that is `midclt` (websocket) with `curl` as fallback:
 
@@ -176,8 +166,6 @@ with Client(os.environ['TRUENAS_WS_URL'], api_key=os.environ['TRUENAS_API_KEY'])
 
 Each skill also ships a `check.sh` that verifies the CLI is installed, env vars are set, and the host is reachable before the agent tries to use it. Validation moves from MCP schema enforcement (happens automatically before every call) to `check.sh` (happens at load time, once). For stable infrastructure with a single operator that is a reasonable trade. For production systems with many contributors and rapidly evolving APIs, MCPs may still be the right call.
 
----
-
 ## 7. Real audit numbers
 
 Before starting this work I pulled six days of session data from my setup:
@@ -192,8 +180,6 @@ The right time to fix token obesity is before you are paying per token, not afte
 
 I also found a secondary problem during the audit: AGENTS.md had grown to 99% of the 12,000-character per-file bootstrap limit, meaning it was being silently truncated on every turn. The workspace files, which everyone assumes are the main context cost, were actually only 8% of the total. The other 92% was tool schemas that nobody had looked at.
 
----
-
 ## 8. The replacement stack
 
 For reference, this is what replaced the three MCP servers in my setup:
@@ -206,23 +192,17 @@ For reference, this is what replaced the three MCP servers in my setup:
 
 All three follow the same pattern: a primary CLI or library path with documented fallback commands for anything the primary does not cover. The skill documents both paths. The model chooses based on what the task requires.
 
----
-
 ## 9. Conclusion
 
-MCP servers are a reasonable architecture for giving agents access to external services. The problem is the cost model: every tool schema defined by an active MCP server gets injected with every API call, whether those tools are relevant to the current task or not. As the ecosystem adds more MCP servers (GitHub, Datadog, Atlassian, Stripe, Slack, Sentry, AWS, Kubernetes), the baseline context overhead per message compounds.
+MCP servers are a reasonable architecture for giving agents access to external services. The problem is the cost model when every tool schema defined by an active MCP server is injected into the model request, whether those tools are relevant to the current task or not. As the ecosystem adds more MCP servers (GitHub, Datadog, Atlassian, Stripe, Slack, Sentry, AWS, Kubernetes), the baseline context overhead per message compounds.
 
 On flat-rate plans, this is invisible. Under per-token billing, it is a significant and growing cost that starts before any work has been done.
 
-Skills sidestep this by being lazy. A skill entry is a name and a description, a few dozen tokens. Full instructions load when needed. The model calls CLIs and APIs directly. The capability is the same; the upfront cost is not.
+Skills sidestep this by being lazy. A skill entry is a name and a description, a few dozen tokens. Full instructions load when needed. The model calls CLIs and APIs directly. The capability is the same. The upfront cost is not.
 
-The numbers from this setup: 44,500 tokens saved per turn, a 75% reduction in baseline context overhead, and a monthly saving of roughly $62 under Sonnet cached pricing, or $622 at uncached rates. On a flat rate today, not relevant. On usage-based billing, very much so.
-
----
+The numbers from this setup are clear. 44,500 tokens saved per turn, a 75% reduction in baseline context overhead, and a monthly saving of roughly $62 under Sonnet cached pricing, or $622 at uncached rates. On a flat rate today, not relevant. On usage-based billing, very much so.
 
 > **A note on GitHub Copilot:** Copilot Pro+ at $39/month is a flat rate that absorbs all token volume. If you stay within the request limits, this overhead is financially invisible. The analysis in this article applies to direct API usage with Anthropic, OpenAI, Google, AWS Bedrock, or any other pay-per-token provider. If you are on Copilot and not planning to switch, the context window fill rate argument still applies: you hit context limits sooner. But the cost argument does not, until Copilot's usage-based transition completes.
-
----
 
 **Further reading:**
 
@@ -232,17 +212,9 @@ The numbers from this setup: 44,500 tokens saved per turn, a 75% reduction in ba
 - [MindStudio: Claude Code MCP token overhead analysis](https://www.mindstudio.ai/blog/claude-code-mcp-server-token-overhead) - tool injection mechanism explained
 - [Cursor 40-tool limit discussion](https://forum.cursor.com/t/tools-limited-to-40-total/67976) - context pressure forcing hard limits
 - [OpenCode MCP tool search plugin](https://lobehub.com/mcp/francisco-m001-opencode-mcp-tool-search) - lazy loading for OpenCode
-- [Datadog MCP server](https://docs.datadoghq.com/bits_ai/mcp_server) - 16+ core tools, additional toolsets
-- [Atlassian MCP server](https://github.com/atlassian/atlassian-mcp-server) - Jira, Confluence, Compass
-- [AWS MCP suite](https://github.com/awslabs/mcp) - 20+ individual servers
-- [Sentry MCP](https://github.com/getsentry/sentry-mcp) - official debugging MCP
 - [AgentSkills specification](https://agentskills.io) - the skill format used by OpenClaw and oh-my-openagent
 - [oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent) - skills for OpenCode, same lazy-loading pattern
 - [truenas/api_client](https://github.com/truenas/api_client) - official TrueNAS Python client used in replacement
 - [opn-cli](https://github.com/andreas-stuerz/opn-cli) - community OPNsense CLI
 - [shot-scraper](https://shot-scraper.datasette.io) - Simon Willison's browser scraping CLI
-- [Anthropic pricing](https://www.anthropic.com/pricing) - Claude API rates
-- [OpenAI pricing](https://openai.com/api/pricing/) - GPT API rates
-- [Google AI pricing](https://ai.google.dev/pricing) - Gemini API rates
-- [AWS Bedrock pricing](https://aws.amazon.com/bedrock/pricing/) - Bedrock rates
 - [pricepertoken.com](https://pricepertoken.com) - cross-provider pricing comparisons
