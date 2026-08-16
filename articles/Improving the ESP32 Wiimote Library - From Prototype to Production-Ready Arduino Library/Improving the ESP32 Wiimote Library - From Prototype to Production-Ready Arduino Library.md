@@ -34,13 +34,9 @@ However, once I began integrating the library into a larger project, some limita
 
 None of these issues prevented the library from working, but they made it harder to integrate into a reliable system. In particular, when building systems that run continuously or interact with other services, features like connection monitoring, structured logging, and predictable APIs become much more important.
 
-Rather than starting from scratch, I decided to refactor and extend the original project while preserving its core functionality. The result is my fork of the library:
-
-* <https://github.com/andremmfaria/ESP32Wiimote>
+Rather than starting from scratch, I decided to refactor and extend the original project while preserving its core functionality. The result is my fork of the library, [andremmfaria/ESP32Wiimote](https://github.com/andremmfaria/ESP32Wiimote).
 
 The goal of the fork is not to replace the original work, but to evolve it into a more maintainable and production-ready Arduino library. The improvements focus on code organization, runtime features, testing infrastructure, and integration with the broader Arduino ecosystem.
-
----
 
 ## 2. The Real Project Behind This Work
 
@@ -97,8 +93,6 @@ Improving the Wiimote library therefore became the first step toward enabling th
 
 In a **follow-up article**, I will go deeper into the Home Assistant side of the project and describe how the ESP32 firmware, serial bridge, and MQTT integration work together to turn a Wiimote into a home automation controller.
 
----
-
 ## 3. Applying Arduino Library Best Practices
 
 The original **[ESP32Wiimote](https://github.com/hrgraf/ESP32Wiimote)** already provides a solid implementation for connecting ESP32 boards to Wii controllers. The core Bluetooth functionality, input decoding, and extension support were all present and working well.
@@ -151,8 +145,6 @@ These changes do not alter the fundamental behavior of the library. Instead, the
 
 Aligning the project with these conventions also made it possible to submit the library to the Arduino Library Manager, which significantly improves accessibility for users of the Arduino ecosystem.
 
----
-
 ## 4. New Runtime Features
 
 Beyond structural improvements, the fork introduces several runtime capabilities that make the library easier to integrate into real applications.
@@ -178,8 +170,6 @@ This allows firmware to react appropriately when a controller disconnects. For e
 
 This functionality becomes particularly important for long-running systems where the ESP32 may stay powered on for days or weeks.
 
----
-
 ### Battery Monitoring
 
 Another addition is access to the Wiimote’s battery level.
@@ -199,8 +189,6 @@ This allows applications to monitor controller battery status in real time. In s
 
 For home automation scenarios, battery information can also be forwarded to monitoring systems through MQTT or similar telemetry mechanisms.
 
----
-
 ### Improved Logging and Debugging
 
 Debugging Bluetooth communication can be difficult when limited to raw serial output. To make troubleshooting easier, the library introduces a configurable logging system.
@@ -213,8 +201,6 @@ Different logging levels allow developers to control how much information is pri
 * extension controller detection
 
 Structured logging makes it much easier to diagnose issues during development or integration.
-
----
 
 ### Expanded Example Sketch
 
@@ -232,8 +218,6 @@ The updated example now illustrates:
 Instead of acting only as a minimal demo, the example now serves as a **reference implementation** for developers integrating the library into their own projects.
 
 This combination of new runtime features and improved examples makes the library more suitable for real-world systems where reliability, observability, and maintainability are essential.
-
----
 
 ## 5. Adding Automated Testing
 
@@ -253,15 +237,11 @@ In addition to automated tests, the example sketch serves as a **hardware valida
 
 Testing embedded software will always involve some interaction with real hardware, but combining automated tests with structured examples makes it much easier to maintain the project over time.
 
----
-
 ## 6. Publishing to the Arduino Library Manager
 
 After aligning the repository structure with Arduino conventions and improving the library itself, the final step was to make the project easier for others to install and use.
 
-The Arduino ecosystem distributes libraries through the **Arduino Library Manager**, which indexes libraries from a central repository:
-
-* [Arduino Library Registry](https://github.com/arduino/library-registry?tab=readme-ov-file#adding-a-library-to-library-manager)
+The Arduino ecosystem distributes libraries through the **Arduino Library Manager**, which indexes libraries from the [Arduino Library Registry](https://github.com/arduino/library-registry?tab=readme-ov-file#adding-a-library-to-library-manager).
 
 To make a library available there, it must meet several requirements, including:
 
@@ -270,9 +250,7 @@ To make a library available there, it must meet several requirements, including:
 * semantic versioning
 * a tagged release
 
-Once those requirements were met, the library was submitted to the registry through a pull request:
-
-* ESP32Wiimote Arduino Library Manager submission: <https://github.com/arduino/library-registry/pull/7883>
+Once those requirements were met, the library was submitted through the [ESP32Wiimote Arduino Library Manager pull request](https://github.com/arduino/library-registry/pull/7883).
 
 After the submission was reviewed and the automated checks passed, the library was accepted into the index.
 
@@ -285,8 +263,6 @@ For developers, this provides several advantages:
 * easier discovery within the Arduino ecosystem
 
 Making the library available through the Library Manager helps ensure that ESP32 developers who want to use Wii controllers can install and use the project with minimal setup.
-
----
 
 ## 7. Future Improvements
 
@@ -314,8 +290,6 @@ Additional improvements could include:
 
 As with many open-source projects, the direction of these improvements will largely depend on the needs of the community and the projects that adopt the library.
 
----
-
 ## Conclusion
 
 The original **[ESP32Wiimote](https://github.com/hrgraf/ESP32Wiimote)** already provided a solid implementation for connecting Wii controllers to ESP32 boards. This work focused on building on top of that foundation by applying Arduino ecosystem best practices and introducing several practical improvements.
@@ -334,8 +308,6 @@ Some of the key improvements include:
 
 The result is a library that keeps the strengths of the original implementation while making it easier for developers to install, use, and extend.
 
-The library is available here:
-
-* ESP32Wiimote: <https://github.com/andremmfaria/ESP32Wiimote>
+The library is available at [andremmfaria/ESP32Wiimote](https://github.com/andremmfaria/ESP32Wiimote).
 
 If you are interested in using Wii controllers with ESP32 boards, this library provides a solid starting point—and hopefully a foundation for even more creative projects in the future.

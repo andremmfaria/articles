@@ -21,7 +21,7 @@ This time the plan was to improve those agents by studying [CL4R1T4S](https://gi
 
 What actually happened was more useful and less flattering. My agents were mostly fine. Their security boundary around untrusted content was not.
 
-CL4R1T4S was not just an archive; its README contained a prompt-injection attempt aimed at the model rather than the human. Around the same time, Mitchell Hashimoto [posted on X](https://x.com/mitchellh/status/2067970516951150721) that he deliberately seeds `AGENTS.md` and code comments with prompt injections to catch unreviewed AI-generated open-source submissions. Repositories are no longer passive context. They can be defensive tripwires, hostile inputs, policy tests, or all three.
+CL4R1T4S was not just an archive. Its README contained a prompt-injection attempt aimed at the model rather than the human. Around the same time, Mitchell Hashimoto [posted on X](https://x.com/mitchellh/status/2067970516951150721) that he deliberately seeds `AGENTS.md` and code comments with prompt injections to catch unreviewed AI-generated open-source submissions. Repositories are no longer passive context. They can be defensive tripwires, hostile inputs, policy tests, or all three.
 
 The academic literature points the same way. Yi et al.'s BIPIA work frames indirect prompt injection as malicious instructions embedded in external content ([Yi et al., 2025](https://arxiv.org/abs/2312.14197)). Zhan et al.'s InjecAgent benchmark shows how that problem escalates when agents can call tools across domains like email, finance, and smart home devices ([Zhan et al., 2024](https://arxiv.org/abs/2403.02691)).
 

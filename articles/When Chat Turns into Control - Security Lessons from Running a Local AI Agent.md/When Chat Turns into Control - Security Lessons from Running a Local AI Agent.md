@@ -32,8 +32,6 @@ In this setup, the agent is controlled through **[Discord](https://discord.com/)
 
 Everything is self-hosted and not directly exposed to the internet. At first glance, this feels “safe enough.” But once you let an agent *do things*, not just chat, you’re no longer dealing with a toy system. You’re running automation driven by natural language, which changes the security model completely.
 
----
-
 ## 2. Architecture and trust boundaries
 
 At a high level, the system has three layers:
@@ -48,29 +46,21 @@ Discord is an **untrusted input surface**, even if the users themselves are trus
 
 OpenClaw sits in the middle as a **control plane**. It turns text into actions. The problem is that LLMs don’t distinguish between “instructions” and “data.” Everything is just language. This is a known and well-documented weakness of LLM systems, and it’s why prompt injection keeps showing up as the dominant failure mode in agent-based designs ([arXiv:2601.09625](https://arxiv.org/abs/2601.09625)).
 
-Finally, when the agent can execute tools (filesystem access, memory writes, or web fetches) the risk escalates. Academic and industry analyses consistently show that once an injected prompt can *chain actions*, the impact is no longer limited to bad answers; it can affect the system itself ([arXiv:2410.23308](https://arxiv.org/abs/2410.23308)).
+Finally, when the agent can execute tools (filesystem access, memory writes, or web fetches) the risk escalates. Academic and industry analyses consistently show that once an injected prompt can *chain actions*, the impact is no longer limited to bad answers. It can affect the system itself ([arXiv:2410.23308](https://arxiv.org/abs/2410.23308)).
 
 One important takeaway: running Ollama and OpenClaw on separate hosts improves performance and resilience, but it does **not** automatically solve these security problems. The weakest link is still the language interface.
 
----
-
 ## 3. The security problem with small models
 
-Qwen3 8B is a great fit for a home lab: it’s fast, it runs well on a consumer GPU (RTX 3070), and it’s cheap to keep online. The downside is that small-ish models are **easier to steer off course**.
+Qwen3 8B is a great fit for a home lab. It’s fast, it runs well on a consumer GPU (RTX 3070), and it’s cheap to keep online. The downside is that small-ish models are **easier to steer off course**.
 
-That matters because agents don’t just “answer questions.” They can **call tools**, update memory, and sometimes fetch or interpret external content. Prompt injection is now widely treated as a top-tier LLM risk for exactly this reason: language is both *data* and *instructions*, and the model can be tricked into treating untrusted text as “policy.” OWASP calls this out directly as a primary risk category for LLM apps. ([OWASP](https://owasp.org/www-project-top-10-for-large-language-model-applications))
+That matters because agents don’t just “answer questions.” They can **call tools**, update memory, and sometimes fetch or interpret external content. Prompt injection is now widely treated as a top-tier LLM risk for exactly this reason. Language is both *data* and *instructions*, and the model can be tricked into treating untrusted text as “policy.” OWASP calls this out directly as a primary risk category for LLM apps. ([OWASP](https://owasp.org/www-project-top-10-for-large-language-model-applications))
 
-Where it gets nasty is **indirect prompt injection**: the attacker doesn’t need to DM your bot with an obviously malicious prompt. They just need your agent to *consume* content that contains hidden instructions (HTML, docs, logs, etc.). This has been demonstrated repeatedly for web agents, where malicious strings embedded in a page can hijack agent behaviour. ([arXiv:2507.14799](https://arxiv.org/abs/2507.14799))
+Where it gets nasty is **indirect prompt injection**. The attacker doesn’t need to DM your bot with an obviously malicious prompt. They just need your agent to *consume* content that contains hidden instructions (HTML, docs, logs, etc.). This has been demonstrated repeatedly for web agents, where malicious strings embedded in a page can hijack agent behaviour. ([arXiv:2507.14799](https://arxiv.org/abs/2507.14799))
 
-So the core issue isn’t “Qwen is bad.” It’s:
+So the core issue isn’t “Qwen is bad.” It’s the combination of a small model with tool access, a small model with web or content ingestion, and the fact that once it’s an agent, you have to assume the model will occasionally do the wrong thing.
 
-* **Small model + tool access = higher chance of bad tool calls**
-* **Small model + web/content ingestion = bigger prompt injection surface**
-* Once it’s an agent, you have to assume the model will occasionally do the wrong thing
-
-That’s why the security posture for small models tends to be: contain the blast radius (sandbox) and remove the easiest injection paths (web fetch / browser). ([OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html))
-
----
+That’s why the security posture for small models tends to be containment. Limit the blast radius with a sandbox and remove the easiest injection paths, especially web fetch and browser access. ([OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html))
 
 ## 4. Discord as an attack surface
 
@@ -81,7 +71,7 @@ The two main problems are:
 * **Scope creep**: “it’s only our server” slowly becomes “it’s in more channels than intended”
 * **Permission drift**: roles change, new channels get created, people invite the bot elsewhere
 
-So the safe baseline is: deny by default, then allow only what you actually need.
+So the safe baseline is deny by default, then allow only what you actually need.
 
 In practice, that means:
 
@@ -93,8 +83,6 @@ In practice, that means:
 Discord itself supports controlling who can use slash commands through its permissions system (and it’s worth doing that at the Discord layer, not just in the bot). ([Discord](https://discord.com/blog/slash-commands-permissions-discord-apps-bots))
 
 This is the key mental shift: even if the model runs locally and the gateway isn’t public, Discord is still a big input funnel. Treat it like an API surface: least privilege, explicit allowlists, and “assume someone will paste something dumb eventually.” OWASP’s guidance maps well here: prompt injection is not rare, and the best defenses are limiting what the model can do when it gets it wrong. ([OWASP](https://owasp.org/www-project-top-10-for-large-language-model-applications))
-
----
 
 ## 5. Sandboxing and tool restriction
 
@@ -136,8 +124,6 @@ After these changes:
 * OpenClaw’s built-in security audit reported **zero critical or warning findings**
 
 This matches OWASP’s guidance for LLM applications: assume prompt injection will eventually happen, and focus on **reducing blast radius** instead of relying on model behaviour alone ([OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/)).
-
----
 
 ## 6. Takeaways
 

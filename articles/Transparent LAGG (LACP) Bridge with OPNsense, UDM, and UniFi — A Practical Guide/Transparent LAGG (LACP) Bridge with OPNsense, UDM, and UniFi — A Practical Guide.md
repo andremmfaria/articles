@@ -34,17 +34,7 @@ That host and the BACKUP bay are part of a [Home Assistant](https://www.home-ass
 
 ### Sources
 
-I followed these EXCELLENT guides in order to do this:
-
-* **Video:**
-  *How to Configure LAG-LACP*
-  [https://www.youtube.com/watch?v=Rb4vlN_Hf-U](https://www.youtube.com/watch?v=Rb4vlN_Hf-U)
-
-* **Article:**
-  *Configure LAG/LACP on SFP Ports (TP-Link Example)*
-  [https://homenetworkguy.com/how-to/configure-lag-lacp-on-sfp-ports-two-tp-link-switches-with-vlans/](https://homenetworkguy.com/how-to/configure-lag-lacp-on-sfp-ports-two-tp-link-switches-with-vlans/)
-
----
+I followed two excellent guides while doing this: the video [How to Configure LAG-LACP](https://www.youtube.com/watch?v=Rb4vlN_Hf-U) and the article [Configure LAG/LACP on SFP Ports (TP-Link Example)](https://homenetworkguy.com/how-to/configure-lag-lacp-on-sfp-ports-two-tp-link-switches-with-vlans/).
 
 ## 2. Network Topology
 
@@ -62,19 +52,11 @@ UDM → ingresslagg → laggbridge → egresslagg → UniFi Switch
 
 Because the bridge sits inline and has no IP addresses assigned to it, the rest of the network behaves normally. All VLAN tags pass through untouched, and the UDM continues to see the whole network exactly as before.
 
----
-
 ## 3. System Setup (Hardware & Software Overview)
 
 ### Hardware Origin
 
-This OPNsense box came to life after my old laptop suddenly died. Instead of throwing away perfectly good components, I salvaged:
-
-* the **32 GB DDR4 RAM**,
-* the **two SSDs** I later mirrored as RAID-1,
-* and the **Wi-Fi card**,
-
-and reused them inside a **barebones mini-PC** I purchased from [Amazon UK](https://www.amazon.co.uk/dp/B0BJQ1LX28).
+This OPNsense box came to life after my old laptop suddenly died. Instead of throwing away perfectly good components, I salvaged the **32 GB DDR4 RAM**, the **two SSDs** I later mirrored as RAID-1, and the **Wi-Fi card**, then reused them inside a **barebones mini-PC** I purchased from [Amazon UK](https://www.amazon.co.uk/dp/B0BJQ1LX28).
 
 The chassis ships without RAM or storage, making it ideal for a rebuild using recycled parts.
 
@@ -89,8 +71,6 @@ The chassis ships without RAM or storage, making it ideal for a rebuild using re
 And here is the firewall itself, with all six Ethernet interfaces populated:
 
 ![OPNsense box with all NICs connected](opnsense-box-nics-connected.jpg)
-
----
 
 ## 4. Why Use LAGG in Transparent Mode?
 
@@ -108,8 +88,6 @@ This cannot be overstated:
 It is not acting as a router, DHCP server, DNS resolver, or gateway.
 
 It simply passes frames, while optionally filtering or inspecting them inline.
-
----
 
 ## 5. Configuring LAGG on OPNsense
 
@@ -182,8 +160,6 @@ These are independent interfaces I set with fixed IPs (on the UDM side). They st
 
 * **Don’t skip a reboot, LAGG + bridge changes apply more cleanly afterward:** Network interface and bridge changes may not fully apply until after a reboot. Skipping this step can leave the system in a partially configured state, leading to unpredictable behavior or connectivity issues.
 
----
-
 ## 6. Configuring LACP on the UDM (Ingress Side)
 
 The UDM handles the WAN, DHCP, DNS, routing, and VLAN assignments. In this setup, we only need it to expose **two LACP ports** toward the OPNsense box.
@@ -212,8 +188,6 @@ UniFi auto-profiling may assign them to something else (like LAN, PoE, or VLAN-o
 Give it **5–10 seconds** to negotiate.
 If one side is up and the other is not, it will flap.
 
----
-
 ## 7. Configuring LACP on the UniFi Switch (Egress Side)
 
 On the USW-16, the process is similar:
@@ -232,8 +206,6 @@ These two ports will form the downstream side of the bridge.
 
 Label the NICs and cables before you start.
 One swapped cable is enough to break the bundle or cause intermittent LACP flaps.
-
----
 
 ## 8. Testing the Transparent LAGG Bridge
 
@@ -271,8 +243,6 @@ Keep the following **disabled** until you verify stable operation:
 * VLAN offload
 
 Some Intel i225/i226 NICs misbehave with offloading in bridge mode.
-
----
 
 ## 9. Troubleshooting
 
@@ -316,8 +286,6 @@ UDM → ingresslagg → laggbridge → egresslagg → USW
 
 No more, no less.
 
----
-
 ## 10. Final Working Architecture
 
 Once configured, the final architecture looks like this:
@@ -347,8 +315,6 @@ Key properties:
 * UDM retains all core services (DHCP, DNS, routing, VLANs)
 * Redundant links on both sides
 * Clean inline filtering option for OPNsense
-
----
 
 ## 11. Conclusion and results
 

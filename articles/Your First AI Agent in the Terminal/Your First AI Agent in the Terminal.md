@@ -125,7 +125,7 @@ claude
 
 Type `claude` and press Enter. Your browser opens to Anthropic's login page. Sign in with your Anthropic account (the one associated with your Claude Pro or Max plan). Come back to the terminal when it confirms you are logged in.
 
-If you are using an API key instead of a subscription (advanced; skip this if unsure):
+If you are using an API key instead of a subscription (advanced, skip this if unsure):
 
 - **macOS:** `export ANTHROPIC_API_KEY=your-key-here`
 - **Windows:** `$env:ANTHROPIC_API_KEY="your-key-here"` <!-- pragma: allowlist secret -->

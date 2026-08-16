@@ -20,8 +20,6 @@ But the more I looked at the script, the more I noticed a pattern I have seen in
 
 That made me want to build something better.
 
----
-
 ## 2. What I Built Instead
 
 The result is `rpi-display-core`: a small Python framework for SSD1306 and SH1106 OLED displays on the Raspberry Pi. The goal was to eliminate all the display boilerplate and replace it with a clean, composable API.
@@ -51,9 +49,7 @@ The framework provides:
 
 The framework is available on PyPI, has a full pytest suite, and includes examples such as a `systemd` service so you can run your display as a persistent background service.
 
-The repository is at: [https://github.com/andremmfaria/rpi-display-core](https://github.com/andremmfaria/rpi-display-core)
-
----
+The repository is [andremmfaria/rpi-display-core](https://github.com/andremmfaria/rpi-display-core).
 
 ## 3. Hardware You'll Need
 
@@ -61,13 +57,11 @@ The hardware side of this project is minimal. You need a Raspberry Pi, a small O
 
 - **[Raspberry Pi](https://amzn.to/3OrRngj)** — any Pi with I2C support will work. (The Pi 5 is the current recommended board, but i used an Rpi 4b for this)
 - **[Raspberry Pi Power Supply](https://amzn.to/40WQ9RS)** — the official USB-C power supply for the Pi
-- **[32GB MicroSD Card](https://amzn.to/40Q1Dq8)** — any class-10 card works; 32GB is more than enough
+- **[32GB MicroSD Card](https://amzn.to/40Q1Dq8)** — any class-10 card works. 32GB is more than enough
 - **[I2C OLED Display 128×64](https://amzn.to/4i3Nvjd)** — the 0.96-inch SSD1306 module or 1.3-inch SH1106 module, four pins (GND, VCC, SCL, SDA)
 - **[4-Wire Female-to-Female Jumper Cables](https://amzn.to/4fr4Dh7)** — for connecting the display to the GPIO header
 
 The framework supports both SSD1306 and SH1106 I2C displays. SPI variants are out of scope.
-
----
 
 ## 4. Wiring It Up
 
@@ -90,8 +84,6 @@ i2cdetect -y 1
 
 You should see `3c` appear in the output grid, which is the default I2C address for SSD1306 and SH1106 displays.
 
----
-
 ## 5. Installing the Framework
 
 The framework is available on PyPI and can be installed using `uv`:
@@ -109,8 +101,6 @@ To verify the installation:
 ```bash
 python -c "from rpi_display.displays.ssd1306 import SSD1306Display; from rpi_display import canvas, Widget, Runner; print('ok')"
 ```
-
----
 
 ## 6. Core Concepts
 
@@ -172,8 +162,6 @@ Runner(SSD1306Display(), SystemStatsWidget(), fps=1).run()
 
 The loop runs until interrupted. A `try/finally` block ensures `display.clear()` is always called on exit, leaving the screen blank rather than frozen on the last frame.
 
----
-
 ## 7. Built-in Widgets
 
 The framework ships several widgets out of the box.
@@ -230,8 +218,6 @@ The CPU widget deliberately avoids `top -bn1` because it is slow and creates its
 
 `Spinner` cycles through `|`, `/`, `-`, `\` characters, advancing one frame per `render()` call. The caller controls speed by adjusting the Runner's FPS.
 
----
-
 ## 8. A Complete Example
 
 Here is a full script using `SystemStatsWidget` with `Runner`. This is also what the systemd service example uses:
@@ -257,8 +243,6 @@ d = MockDisplay()
 Runner(d, SystemStatsWidget(), fps=10).run()
 # d.last_image holds the most recent PIL Image after each render
 ```
-
----
 
 ## 9. Running as a systemd Service
 
@@ -299,8 +283,6 @@ journalctl -u rpi-display -f
 
 If the service restarts repeatedly, the most common cause is the display not being detected. Run `i2cdetect -y 1` to confirm `3c` appears.
 
----
-
 ## 10. Development Workflow
 
 If you want to contribute to the project, I use `uv` for development. The following commands are used for linting, formatting, and testing:
@@ -314,8 +296,6 @@ uv run mypy
 uv run pytest
 ```
 
----
-
 ## 11. Future Improvements
 
 The framework covers the common cases for I2C OLED displays, but there are a number of directions it could grow.
@@ -324,15 +304,13 @@ The framework covers the common cases for I2C OLED displays, but there are a num
 - **Additional widgets**: I am considering adding `BitmapWidget` for rendering 1-bit PNG or BMP files and a `QRCodeWidget` for generating codes on the fly.
 - **Enhanced scrolling**: The `ScrollingText` widget currently wraps at the end of the text. Supporting bidirectional bounce scrolling is a planned improvement.
 
----
-
 ## Conclusion
 
 Starting from Michael Klements' original stats display script, this project built a composable Python framework that replaces display boilerplate with clean abstractions. The specialized display classes, `canvas`, `Widget`, and `Runner` primitives cover the full rendering lifecycle, and the built-in widgets handle the most common display use cases.
 
 The framework is available on PyPI at <https://pypi.org/project/rpi-display-core>, is fully tested, and is designed for production use on the Raspberry Pi.
 
-The repository is available at: [https://github.com/andremmfaria/rpi-display-core](https://github.com/andremmfaria/rpi-display-core)
+The repository is available at [andremmfaria/rpi-display-core](https://github.com/andremmfaria/rpi-display-core).
 
 Credits:
 

@@ -22,8 +22,6 @@ Ekrem applies this to AI-assisted software development and argues we are sleepwa
 
 It's a well-argued piece. But it has a gap in it, and that gap leads somewhere interesting.
 
----
-
 ## Where the Argument Holds
 
 Ekrem's strongest point isn't about AI. It's about what happens when any shortcut severs the connection between doing and understanding.
@@ -33,8 +31,6 @@ His illustration is a colleague who spent an afternoon refusing to merge a PR th
 The colleague had smelled it from the diff. Not from reading a document. From a decade of looking at similar things and accumulating a mental model of where pain tends to come from. That kind of knowledge doesn't show up in any training corpus because it was never written down in any single place. It was always distributed across experience, context, and memory.
 
 An AI can't replicate that. Not because current models are too limited, but because the knowledge is structurally absent from anything a model could be trained on. That's the actual claim, and it survives scrutiny.
-
----
 
 ## Where I Push Back
 
@@ -46,8 +42,6 @@ Ekrem calls one failure mode the Fluency Mask: AI's verbal fluency about code be
 
 My son will grow up in a world where AI is as ambient as the internet was for my generation. He won't know a time without it. The question isn't whether he'll use it, he will and he should, but whether he'll use it well or badly. The distinction I want him to carry is simple: AI is a tool to resolve a specific gap, not a replacement for developing the judgment to know where the gap is. Think first. Reach when stuck. Understand what you got back. Inverting that sequence is where the damage happens.
 
----
-
 ## Building the Muscle
 
 The most important window is before he can fluently use AI, which is shrinking fast. The cognitive capacity I want him to develop is tolerance for not-knowing: the ability to sit with an unresolved problem without immediately reaching for relief. Everything downstream of that, debugging, reasoning, designing, the smell that something is wrong before you can name what, depends on being able to stay in the discomfort long enough to actually think.
@@ -58,8 +52,6 @@ When AI is in the picture, I want to use it with him out loud, narrating why I'm
 
 After he's worked through something, I want to ask him to explain it back. Not as a test. As genuine curiosity. The act of explanation forces him to consolidate what he actually understood versus what he pattern-matched. The gaps surface immediately. He'll say something and pause because he doesn't actually know why it works that way. That pause is the whole point. Recognising it as a gap rather than papering over it with confident-sounding words is the habit I want him to have.
 
----
-
 ## The Actual Apprenticeship
 
 The most direct version of all of this is the simplest: when I'm working through something, a problem, a piece of code, a decision, let him watch sometimes. Not to teach him the domain. To show him what thinking looks like. The false starts. The "hmm, that's not right." The moment something clicks. Most kids never see an adult genuinely wrestling with a hard problem because adults hide the struggle. Showing him the struggle, including my own uncertainty, is probably the most valuable thing I can do.
@@ -69,7 +61,5 @@ The threat isn't AI. The threat is the absence of people willing to do the slow 
 For my son, that's the job. Not to keep him away from AI, that ship has sailed and the destination is fine, but to make sure he gets enough reps on the longer road first that he knows what it feels like and why it's worth walking.
 
 The kids who figure that out will be the ones the next generation of teams desperately needs.
-
----
 
 *Inspired by [The Tacit Dimension](https://cekrem.github.io/posts/the-tacit-dimension/) by Christian Ekrem, and by a conversation with an AI assistant that was, appropriately, more useful than I expected.*

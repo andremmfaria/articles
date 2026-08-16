@@ -12,8 +12,7 @@ date: '2025-11-11T00:04:13Z'
 
 A straightforward, distro-agnostic way to install Ghidra under /opt without touching your system Java alternatives, plus environment wiring that makes upgrades safe and re-runs idempotent.
 
-Disclaimer:
-This post assumes you’re comfortable using the terminal with sudo, have basic knowledge of environment variables, and can install a few command‑line tools (wget, unzip, tar) with your distro’s package manager.
+Disclaimer. This post assumes you’re comfortable using the terminal with sudo, have basic knowledge of environment variables, and can install a few command‑line tools (wget, unzip, tar) with your distro’s package manager.
 
 ## What you’ll get
 
@@ -22,10 +21,9 @@ This post assumes you’re comfortable using the terminal with sudo, have basic 
 - `GHIDRA_INSTALL_DIR` and `GHIDRA_JAVA_HOME` added to your shell RC (`~/.bashrc` or `~/.zshrc`)
 - A process that is safe to re-run for upgrades and repairs
 
-Note: The approach works across common Linux distributions. The automated script tries to install helper tools via `apt` when available, but it gracefully skips on other distros—so on RPM/Arch-based systems, just install `wget`, `unzip`, and `tar` via your package manager first.
+One note. The approach works across common Linux distributions. The automated script tries to install helper tools via `apt` when available, but it gracefully skips on other distros—so on RPM/Arch-based systems, just install `wget`, `unzip`, and `tar` via your package manager first.
 
-Customization tip:
-You can change the Ghidra version, release date, download URL, or even inject checksum verification simply by editing the constants at the top of the referenced script (`GHIDRA_VERSION`, `GHIDRA_DATE`, `GHIDRA_URL`, `GHIDRA_SHA256`, plus the Java bits like `TEMURIN_MAJOR`, `TEMURIN_API_URL`, `TEMURIN_SHA256`). Adjust them, re-run the script, and it will perform an atomic upgrade while backing up previous installs.
+Customization tip. You can change the Ghidra version, release date, download URL, or even inject checksum verification simply by editing the constants at the top of the referenced script (`GHIDRA_VERSION`, `GHIDRA_DATE`, `GHIDRA_URL`, `GHIDRA_SHA256`, plus the Java bits like `TEMURIN_MAJOR`, `TEMURIN_API_URL`, `TEMURIN_SHA256`). Adjust them, re-run the script, and it will perform an atomic upgrade while backing up previous installs.
 
 ## 1) Prerequisites
 
@@ -42,7 +40,7 @@ Also ensure you have sudo privileges.
 
 ## 2) Install a private Temurin JDK 21 under /opt
 
-Why: Ghidra runs best on a modern LTS JDK. Installing a local Temurin JDK avoids messing with system-wide Java alternatives and keeps Ghidra isolated.
+Why this matters. Ghidra runs best on a modern LTS JDK. Installing a local Temurin JDK avoids messing with system-wide Java alternatives and keeps Ghidra isolated.
 
 Key details:
 
@@ -90,7 +88,7 @@ What gets added to your shell RC (`~/.bashrc` for bash, `~/.zshrc` for zsh):
 
 Open a new shell or `source ~/.bashrc` / `source ~/.zshrc` to apply the changes.
 
-### Optional: add Ghidra binaries to PATH
+### Optional PATH Setup
 
 If you want to call both the headless tools and the GUI launcher from anywhere, add both the `support` directory and the root install dir to PATH.
 
@@ -135,7 +133,7 @@ This setup is designed to be re-run safely:
 
 - Temurin: new JDK drops into a versioned folder, `current` symlink is updated atomically
 - Ghidra: any existing `/opt/ghidra` is backed up to `/opt/ghidra.bak-<timestamp>` before replacement
-- Env: `GHIDRA_JAVA_HOME` is updated or inserted once; subsequent runs update it if needed
+- Env: `GHIDRA_JAVA_HOME` is updated or inserted once. Subsequent runs update it if needed
 
 To upgrade to a newer Ghidra release, adjust the version/date variables (or pull the latest script) and re-run. Your environment variables remain compatible.
 
@@ -150,7 +148,7 @@ To upgrade to a newer Ghidra release, adjust the version/date variables (or pull
 
 - Missing tools on non-Debian distros: install `wget`, `unzip`, `tar` via your package manager
 - Permission denied under `/opt`: you need `sudo` privileges for system locations
-- GUI on servers/WSL: Ghidra’s GUI requires an X server; use headless mode with `analyzeHeadless` if you don’t have a display
+- GUI on servers/WSL: Ghidra’s GUI requires an X server. Use headless mode with `analyzeHeadless` if you don’t have a display
 - Java detection: if Ghidra prompts for a JDK, ensure `GHIDRA_JAVA_HOME` is set and points to a valid JDK with `bin/java`
 
 ## 9) Optional: headless workflow teaser
@@ -159,9 +157,7 @@ Ghidra ships `analyzeHeadless` for automation. For example, to run a simple anal
 
 ## Full automation script (reference)
 
-All the steps above are automated in a single idempotent script that you can read and run:
-
-- Script: <https://github.com/andremmfaria/rexis/blob/main/scripts/install-ghidra.sh>
+All the steps above are automated in a single idempotent script that you can read and run at <https://github.com/andremmfaria/rexis/blob/main/scripts/install-ghidra.sh>.
 
 What it does for you:
 

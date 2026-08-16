@@ -24,7 +24,7 @@ From my point of view, there are two basic types of metrics that you can apply t
 
 ## Business meaning
 
-When we talk about metrics from a business standpoint we are trying to quantify whether the service is succeeding in creating (and keeping) value. A metric is a proxy for an outcome; no proxy is perfect, but good ones are:
+When we talk about metrics from a business standpoint we are trying to quantify whether the service is succeeding in creating (and keeping) value. A metric is a proxy for an outcome. No proxy is perfect, but good ones are:
 
 1. Connected to customer impact (they move when users are happier or churn when they are not)
 2. Hard to game (improving the number tends to improve the underlying reality)
@@ -51,17 +51,17 @@ Think in concentric layers:
 1. North Star (one, maybe two)
 2. Strategic pillars (fairly stable: acquisition, activation, retention, efficiency)
 3. Operational KPIs (change more often, tie to teams OKRs)
-4. Diagnostic metrics (rich, detailed; used to explain movement, rarely reported upward)
+4. Diagnostic metrics (rich, detailed, used to explain movement, rarely reported upward)
 
 ### Business questions to validate
 
-Before adopting a business metric ask: What decision will change if this metric moves? Who owns reacting to it? How fast must we respond? What thresholds define success vs. acceptable vs. alert?
+Before adopting a business metric, ask what decision will change if this metric moves, who owns reacting to it, how fast the response must be, and what thresholds define success vs. acceptable vs. alert.
 
 ### Common business metric mistakes
 
 - Measuring everything and prioritizing nothing
 - Declaring a vanity metric (raw signups) as success without a quality filter
-- Lacking a clear owner; metrics without owners decay
+- Lacking a clear owner. Metrics without owners decay
 - Setting targets without historical baselines or variance analysis
 - Not revisiting metrics when the product stage changes (growth vs. efficiency phase)
 
@@ -75,33 +75,33 @@ On the technical side, metrics become the nervous system of operating the servic
 
 ### Observability pillars vs. service metrics
 
-Observability often cites three pillars: metrics (numeric aggregations), logs (discrete events with context), traces (distributed request flows). Service metrics sit at the top as *interpreted* numbers distilled from raw telemetry. You rarely alert on raw logs; you derive counters, rates, percentiles. See [OpenTelemetry](https://opentelemetry.io/) for standardized telemetry and this discussion on [Monitoring vs. Observability](https://aws.amazon.com/compare/the-difference-between-monitoring-and-observability/).
+Observability often cites three pillars: metrics (numeric aggregations), logs (discrete events with context), traces (distributed request flows). Service metrics sit at the top as *interpreted* numbers distilled from raw telemetry. You rarely alert on raw logs. You derive counters, rates, percentiles. See [OpenTelemetry](https://opentelemetry.io/) for standardized telemetry and this discussion on [Monitoring vs. Observability](https://aws.amazon.com/compare/the-difference-between-monitoring-and-observability/).
 
 ### Golden signals
 
-Borrowing from SRE practice, the four golden signals of a user-facing system:
+Borrowing from SRE practice, the four golden signals of a user-facing system are:
 
 1. Latency – How long it takes to serve a request (track both success and error paths, p50/p95/p99).
-2. Traffic – Demand size: requests/second, concurrent sessions.
-3. Errors – Failure rate: explicit errors, timeouts, correctness failures.
-4. Saturation – Resource exhaustion proximity: CPU, memory, queue length.
-Add a fifth in many modern systems: Cost – Unit economics per request/job.
+2. Traffic – Demand size, such as requests/second and concurrent sessions.
+3. Errors – Failure rate, including explicit errors, timeouts, and correctness failures.
+4. Saturation – Resource exhaustion proximity, such as CPU, memory, and queue length.
+5. Cost – Unit economics per request or job, which matters in many modern systems.
 
 ### SLIs, SLOs, SLAs
 
 - SLI (Service Level Indicator): Precisely defined measurement of user experience (e.g., "fraction of read API requests completed under 300 ms and returning 2xx").
 - SLO (Service Level Objective): Target for SLI over a window ("99.9% weekly").
-- SLA (Service Level Agreement): Contractual externally visible commitment; breaching may have penalties. Always set SLO tighter than SLA.
+- SLA (Service Level Agreement): Contractual externally visible commitment. Breaching may have penalties. Always set SLO tighter than SLA.
 
-Error Budget = 1 - SLO. It is the allowed unreliability used for change velocity (deploys, experiments). If you burn budget too fast: slow releases, add reliability work. If you never spend budget: you may be over-investing. For alerting strategy, consider [multi-window, multi-burn rate SLO alerts](https://sre.google/workbook/alerting-on-slos/).
+Error Budget = 1 - SLO. It is the allowed unreliability used for change velocity (deploys, experiments). If you burn budget too fast, slow releases and add reliability work. If you never spend budget, you may be over-investing. For alerting strategy, consider [multi-window, multi-burn rate SLO alerts](https://sre.google/workbook/alerting-on-slos/).
 
 ### Metric types (Prometheus style)
 
 - Counter: Monotonic increase (e.g., total requests). Alert on *rate* not raw value. ([Prometheus counter](https://prometheus.io/docs/concepts/metric_types/#counter))
 - Gauge: Arbitrary up/down (e.g., memory usage, queue depth). ([Prometheus gauge](https://prometheus.io/docs/concepts/metric_types/#gauge))
 - Histogram: Buckets of observations (latency). Enables percentiles & tail analysis. ([Prometheus histogram](https://prometheus.io/docs/concepts/metric_types/#histogram))
-- Summary: Client-side calculated quantiles; use sparingly due to aggregation limits. ([Prometheus summary](https://prometheus.io/docs/concepts/metric_types/#summary))
-Prefer histograms for latency & size; counters for events; gauges for states. Ensure unit consistency (seconds, bytes). Document each metric: name, type, unit, cardinality dimensions. Good primers: [Prometheus histograms and summaries](https://prometheus.io/docs/practices/histograms/) and [Gil Tene on latency percentiles](https://www.youtube.com/watch?v=lJ8ydIuPFeU).
+- Summary: Client-side calculated quantiles. Use sparingly due to aggregation limits. ([Prometheus summary](https://prometheus.io/docs/concepts/metric_types/#summary))
+Prefer histograms for latency & size, counters for events, and gauges for states. Ensure unit consistency (seconds, bytes). Document each metric with its name, type, unit, and cardinality dimensions. Good primers include [Prometheus histograms and summaries](https://prometheus.io/docs/practices/histograms/) and [Gil Tene on latency percentiles](https://www.youtube.com/watch?v=lJ8ydIuPFeU).
 
 ### Cardinality discipline
 
@@ -121,11 +121,11 @@ High-cardinality labels (user_id, session_id) explode storage and slow queries. 
 
 ### Aggregation & rollups
 
-Store both raw series and periodic rollups (1m, 5m, 1h) to enable long-range trends affordably. Tail metrics (p99) need raw-ish resolution; cost/traffic can tolerate coarser granularity. See [Recording rules](https://prometheus.io/docs/practices/rules/) and [continuous aggregates](https://medium.com/timescale/real-time-analytics-for-time-series-a-devs-intro-to-continuous-aggregates-b9c38b5746f0/).
+Store both raw series and periodic rollups (1m, 5m, 1h) to enable long-range trends affordably. Tail metrics (p99) need raw-ish resolution. Cost and traffic can tolerate coarser granularity. See [Recording rules](https://prometheus.io/docs/practices/rules/) and [continuous aggregates](https://medium.com/timescale/real-time-analytics-for-time-series-a-devs-intro-to-continuous-aggregates-b9c38b5746f0/).
 
 ### Dashboards vs. alerts
 
-Dashboards are for exploration & storytelling; alerts for actionable interruption. An alert should meet: clear owner, severity classification, runbook link, deduplication logic, and auto-silence conditions (maintenance windows, downstream known incidents). Too many unactionable alerts create alert fatigue; measure mean time to acknowledge (MTTA) and percent of alerts yielding tickets. See [PagerDuty on alert fatigue](https://www.pagerduty.com/resources/digital-operations/learn/alert-fatigue/).
+Dashboards are for exploration and storytelling. Alerts are for actionable interruption. An alert should have a clear owner, severity classification, runbook link, deduplication logic, and auto-silence conditions for maintenance windows or downstream known incidents. Too many unactionable alerts create alert fatigue. Measure mean time to acknowledge (MTTA) and percent of alerts yielding tickets. See [PagerDuty on alert fatigue](https://www.pagerduty.com/resources/digital-operations/learn/alert-fatigue/).
 
 ### Dependency metrics
 
@@ -146,7 +146,7 @@ The most powerful metrics tell a dual story: "p95 checkout latency improved 20%,
 - Primary SLI(s)
 - Key technical driver metrics (cache hit rate, DB lock wait)
 - Leading indicator hypotheses (client render time)
-Revisit mapping quarterly; prune metrics that no longer explain variance.
+Revisit mapping quarterly and prune metrics that no longer explain variance.
 
 ## Metric taxonomy cheat sheet
 
@@ -163,24 +163,24 @@ Revisit mapping quarterly; prune metrics that no longer explain variance.
 - Alerting on averages (hide tail pain) instead of percentiles. See [ACM Queue on percentiles](https://queue.acm.org/detail.cfm?id=1814327).
 - Chasing "100%" reliability (diminishing returns) vs. defined SLO + error budget. See [Error Budgets](https://sre.google/sre-book/service-level-objectives/#error-budgets).
 - Overloading a single metric with too many labels causing cardinality blow-up. See [Prometheus instrumentation pitfalls](https://prometheus.io/docs/practices/instrumentation/#avoid-missing-labels).
-- Building dashboards no one uses: track dashboard views, retire stale boards. See [Grafana dashboard tips](https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/best-practices/).
+- Building dashboards no one uses. Track dashboard views and retire stale boards. See [Grafana dashboard tips](https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/best-practices/).
 - Confusing throughput with performance (more requests could mean retries from errors). Contrast [RED method](https://grafana.com/blog/2018/08/02/the-red-method-how-to-instrument-your-services/) vs. [USE method](https://www.brendangregg.com/usemethod.html).
 
 ## Practical example (API service)
 
-Scenario: Public REST API for document editing.
+The scenario is a public REST API for document editing.
 Defined SLIs:
 
 1. Read latency: fraction of GET /doc/{id} served < 250ms.
 2. Write success: fraction of PUT /doc/{id} returning 2xx.
 3. Editing session stability: sessions without disconnect > 5 minutes.
-SLOs: 99.9%, 99.95%, 99% respectively (weekly). Error budget alarms at 50%, 75%, 100% consumption. Business KPI mapped: active editing minutes per user. Hypothesis: Improving read latency p95 will raise active minutes by reducing initial load friction. Run experiment: introduce edge caching; monitor cache hit rate (target > 80%), origin latency drop (expect -30%). Outcome metrics decide rollout.
+SLOs are 99.9%, 99.95%, and 99% respectively, measured weekly. Error budget alarms fire at 50%, 75%, and 100% consumption. The business KPI is active editing minutes per user. The hypothesis is that improving read latency p95 will raise active minutes by reducing initial load friction. The experiment is edge caching, monitored through cache hit rate (target > 80%) and origin latency drop (expect -30%). Outcome metrics decide rollout.
 
 ## Getting started checklist
 
-1. List top 3 user journeys; define one SLI each.
+1. List top 3 user journeys and define one SLI each.
 2. Set initial SLOs using historical 4-week median performance minus a modest stretch.
-3. Instrument counters for requests, errors; histograms for latency.
+3. Instrument counters for requests and errors, and histograms for latency.
 4. Create one "golden dashboard" with SLIs + dependency saturation metrics.
 5. Define 3 alerts only: SLI burn rate high (short & long window), dependency slowdown, error spike.
 6. Write runbooks before enabling alerts.
@@ -188,4 +188,4 @@ SLOs: 99.9%, 99.95%, 99% respectively (weekly). Error budget alarms at 50%, 75%,
 
 ## Conclusion
 
-Metrics are a language; alignment happens when business and engineering speak a shared dialect rooted in user experience. Start small, be explicit, iterate continuously. The goal is not more graphs; it's faster, better decisions.
+Metrics are a language. Alignment happens when business and engineering speak a shared dialect rooted in user experience. Start small, be explicit, iterate continuously. The goal is not more graphs. It's faster, better decisions.
