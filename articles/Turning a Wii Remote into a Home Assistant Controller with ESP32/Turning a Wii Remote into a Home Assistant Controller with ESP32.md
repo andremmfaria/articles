@@ -127,7 +127,7 @@ And every ten seconds the firmware emits a heartbeat.
 
 <!-- markdownlint-disable MD033 -->
 <video controls muted playsinline>
-  <source src="wiimote-serial-json-demo.mp4" type="video/mp4">
+  <source src="https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Turning%20a%20Wii%20Remote%20into%20a%20Home%20Assistant%20Controller%20with%20ESP32/wiimote-serial-json-demo.mp4" type="video/mp4">
 </video>
 <!-- markdownlint-enable MD033 -->
 
@@ -281,7 +281,7 @@ Once the ESP32 is flashed and the add-on is running, the working loop is satisfy
 
 <!-- markdownlint-disable MD033 -->
 <video controls muted playsinline>
-  <source src="wiimote-home-assistant-living-room-demo.mp4" type="video/mp4">
+  <source src="https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Turning%20a%20Wii%20Remote%20into%20a%20Home%20Assistant%20Controller%20with%20ESP32/wiimote-home-assistant-living-room-demo.mp4" type="video/mp4">
 </video>
 <!-- markdownlint-enable MD033 -->
 
