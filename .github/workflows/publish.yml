@@ -85,6 +85,7 @@ jobs:
               --repo "${{ github.repository }}" \
               --branch "${{ github.ref_name }}" \
               "${extra_args[@]}"
+            sleep 2
           done < .changed_articles
 
       - name: Commit article metadata updates

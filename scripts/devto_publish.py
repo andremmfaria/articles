@@ -4,6 +4,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.parse
 from typing import Any, Dict, List, Tuple
 
@@ -175,33 +176,41 @@ def main(argv: List[str]) -> int:
         },
         method=method,
     )
-    try:
-        with urllib.request.urlopen(req) as resp:
-            response_body = resp.read().decode('utf-8')
-            response = json.loads(response_body)
-            print(f"{method} {url}")
-            print(json.dumps({
-                "id": response.get("id"),
-                "title": response.get("title"),
-                "url": response.get("url"),
-                "edited_at": response.get("edited_at"),
-                "published": response.get("published"),
-            }, ensure_ascii=False))
-            return 0
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode("utf-8", errors="replace")
-        print(f"API error: HTTP {e.code} {e.reason}", file=sys.stderr)
-        print(f"Response body: {error_body[:1000]}", file=sys.stderr)
-        print(f"Request method: {method}", file=sys.stderr)
-        print(f"Request URL: {url}", file=sys.stderr)
-        print(f"Article title: {meta.get('title', '')}", file=sys.stderr)
-        return 2
-    except Exception as e:
-        print(f"API error: {e}", file=sys.stderr)
-        print(f"Request method: {method}", file=sys.stderr)
-        print(f"Request URL: {url}", file=sys.stderr)
-        print(f"Article title: {meta.get('title', '')}", file=sys.stderr)
-        return 2
+    for attempt in range(1, 6):
+        try:
+            with urllib.request.urlopen(req) as resp:
+                response_body = resp.read().decode('utf-8')
+                response = json.loads(response_body)
+                print(f"{method} {url}")
+                print(json.dumps({
+                    "id": response.get("id"),
+                    "title": response.get("title"),
+                    "url": response.get("url"),
+                    "edited_at": response.get("edited_at"),
+                    "published": response.get("published"),
+                }, ensure_ascii=False))
+                return 0
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode("utf-8", errors="replace")
+            if e.code == 429 and attempt < 5:
+                retry_after = e.headers.get("Retry-After")
+                delay = int(retry_after) if retry_after and retry_after.isdigit() else attempt * 10
+                print(f"Rate limited by DEV.to; retrying in {delay}s (attempt {attempt}/5)", file=sys.stderr)
+                time.sleep(delay)
+                continue
+            print(f"API error: HTTP {e.code} {e.reason}", file=sys.stderr)
+            print(f"Response body: {error_body[:1000]}", file=sys.stderr)
+            print(f"Request method: {method}", file=sys.stderr)
+            print(f"Request URL: {url}", file=sys.stderr)
+            print(f"Article title: {meta.get('title', '')}", file=sys.stderr)
+            return 2
+        except Exception as e:
+            print(f"API error: {e}", file=sys.stderr)
+            print(f"Request method: {method}", file=sys.stderr)
+            print(f"Request URL: {url}", file=sys.stderr)
+            print(f"Article title: {meta.get('title', '')}", file=sys.stderr)
+            return 2
+    return 2
 
 
 if __name__ == "__main__":
