@@ -66,4 +66,4 @@ if [[ "$DRY_RUN" != "true" ]] && [[ -z "$API_KEY" ]]; then
   exit 1
 fi
 
-exec "$PYTHON_BIN" "$(dirname "$0")/devto_publish.py" "${ARGS[@]}"
+exec "$PYTHON_BIN" "$(dirname "$0")/../.github/scripts/devto_publish.py" "${ARGS[@]}"

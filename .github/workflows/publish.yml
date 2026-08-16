@@ -7,6 +7,7 @@ on:
     paths:
       - 'articles/**/*.md'
       - '.github/workflows/publish.yml'
+      - '.github/scripts/devto_*.py'
 
 jobs:
   publish:
@@ -19,92 +20,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '20'
-
       - name: Compute changed article files
         id: changed
-        shell: bash
-        run: |
-          set -euo pipefail
-          : > .changed_articles
-
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            find articles -type f -name '*.md' -print0 | sort -z > .changed_articles || true
-          else
-            git diff --name-only -z "${{ github.event.before }}" "${{ github.sha }}" -- 'articles/**/*.md' > .changed_raw || true
-            while IFS= read -r -d '' file; do
-              if [[ -f "$file" ]]; then
-                printf '%s\0' "$file" >> .changed_articles
-              fi
-            done < .changed_raw
-          fi
-
-          count=$(python - <<'PY'
-          from pathlib import Path
-          data = Path('.changed_articles').read_bytes() if Path('.changed_articles').exists() else b''
-          print(len([p for p in data.split(b'\0') if p]))
-          PY
-          )
-
-          if [[ "$count" -eq 0 ]]; then
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            echo "count=0" >> "$GITHUB_OUTPUT"
-            echo "No changed article files to publish."
-          else
-            echo "publish=true" >> "$GITHUB_OUTPUT"
-            echo "count=$count" >> "$GITHUB_OUTPUT"
-            echo "Found $count changed article file(s)."
-          fi
+        run: >-
+          python .github/scripts/devto_workflow.py changed
+          --event-name "${{ github.event_name }}"
+          --before "${{ github.event.before }}"
+          --sha "${{ github.sha }}"
 
       - name: Publish changed articles on DEV.to
         if: steps.changed.outputs.publish == 'true'
-        shell: bash
         env:
-          DEVTO_TOKEN: ${{ secrets.DEV_TO_API_KEY }}
-        run: |
-          set -euo pipefail
-          if [[ "${ACT:-}" == "true" && ( -z "${DEVTO_TOKEN:-}" || "${DEVTO_TOKEN}" == "dummy-local-token" ) ]]; then
-            echo "Running under act without a real DEV.to token; skipping remote publish step."
-            exit 0
-          fi
-
-          extra_args=()
-          if [[ "${ACT:-}" == "true" ]]; then
-            echo "Running under act; enabling DEV.to dry-run mode."
-            extra_args+=(--dry-run)
-          fi
-
-          while IFS= read -r -d '' file; do
-            echo "Publishing $file"
-            python scripts/devto_publish.py \
-              --file "$file" \
-              --api-key "$DEVTO_TOKEN" \
-              --repo "${{ github.repository }}" \
-              --branch "${{ github.ref_name }}" \
-              "${extra_args[@]}"
-            sleep 2
-          done < .changed_articles
+          DEVTO_API_KEY: ${{ secrets.DEV_TO_API_KEY }}
+        run: >-
+          python .github/scripts/devto_workflow.py publish
+          --repo "${{ github.repository }}"
+          --branch "${{ github.ref_name }}"
 
       - name: Commit article metadata updates
         if: steps.changed.outputs.publish == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ "${ACT:-}" == "true" ]]; then
-            echo "Running under act; skipping metadata commit step."
-            exit 0
-          fi
-
-          if git diff --quiet -- articles; then
-            echo "No metadata changes to commit."
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add articles
-          git commit -m "chore(devto): sync article metadata [skip ci]"
-          git push origin "HEAD:${{ github.ref_name }}"
+        run: >-
+          python .github/scripts/devto_workflow.py commit-metadata
+          --branch "${{ github.ref_name }}"

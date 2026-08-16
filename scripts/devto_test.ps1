@@ -39,5 +39,5 @@ if (-not $DryRun.IsPresent -and -not $ApiKey -and -not $env:DEVTO_API_KEY) {
     exit 1
 }
 
-& $python (Join-Path $PSScriptRoot "devto_publish.py") @argsList
+& $python (Join-Path (Split-Path $PSScriptRoot -Parent) ".github/scripts/devto_publish.py") @argsList
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
