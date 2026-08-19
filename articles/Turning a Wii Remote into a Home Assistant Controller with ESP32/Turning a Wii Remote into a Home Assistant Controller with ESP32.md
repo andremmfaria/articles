@@ -1,7 +1,7 @@
 ---
 title: Turning a Wii Remote into a Home Assistant Controller with ESP32
 description: 'A follow-up to the ESP32 Wiimote library work using a real ESP32, a USB serial bridge, MQTT, and a Home Assistant add-on to trigger automations from a Wii Remote.'
-published: false
+published: true
 cover_image: 'https://raw.githubusercontent.com/andremmfaria/articles/main/articles/Turning%20a%20Wii%20Remote%20into%20a%20Home%20Assistant%20Controller%20with%20ESP32/cover-wiimote-home-assistant-controller.png'
 tags:
   - homeassistant
